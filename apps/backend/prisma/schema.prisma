@@ -1,0 +1,78 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  email            String            @unique
+  password         String
+  roleId           Int
+  role             Role              @relation(fields: [roleId], references: [id])
+  readingProgress  ReadingProgress[]
+  readingEventLogs ReadingEventLog[]
+  createdAt        DateTime          @default(now())
+}
+
+model Comic {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  publisher   String?
+  coverUrl    String?
+  writer      String?
+  artist      String?
+  chapters    Chapter[]
+  createdAt   DateTime  @default(now())
+}
+
+model Chapter {
+  id              Int               @id @default(autoincrement())
+  comicId         Int
+  comic           Comic             @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  title           String
+  chapterNumber   Float
+  pagesCount      Int               @default(0)
+  readingProgress ReadingProgress[]
+  readingLogs     ReadingEventLog[]
+  createdAt       DateTime          @default(now())
+}
+
+enum ProgressStatus {
+  UNREAD
+  IN_PROGRESS
+  COMPLETED
+}
+
+model ReadingProgress {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId Int
+  chapter   Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  status    ProgressStatus @default(UNREAD)
+  updatedAt DateTime       @updatedAt
+
+  @@unique([userId, chapterId])
+}
+
+model ReadingEventLog {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapterId Int
+  chapter   Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  status    ProgressStatus
+  timestamp DateTime       @default(now())
+}
