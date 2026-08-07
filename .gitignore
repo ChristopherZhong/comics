@@ -48,3 +48,6 @@ test-output
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+# Generated Prisma Client output
+**/src/generated/
