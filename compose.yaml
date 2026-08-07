@@ -1,15 +1,19 @@
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: comics-postgres
     environment:
-      POSTGRES_USER: comics_user
-      POSTGRES_PASSWORD: comics_password
       POSTGRES_DB: comics_db
+      POSTGRES_PASSWORD: comics_password
+      POSTGRES_USER: comics_user
+    image: postgres:${POSTGRES_VERSION:-alpine}
     ports:
-      - "5432:5432"
+      - mode: bridge
+        protocol: tcp
+        published: "5432"
+        target: "5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - source: postgres_data
+        target: /var/lib/postgresql/data
+        type: volume
 
 volumes:
   postgres_data:
