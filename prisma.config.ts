@@ -1,10 +1,9 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-// Retrieve DB properties from environment variables
-const user = process.env.POSTGRES_USER || "comics_user";
-// Use encodeURIComponent to safely URL/HTML-encode password special characters
-const password = encodeURIComponent(process.env.POSTGRES_PASSWORD || "comics_password");
+// Retrieve DB properties from environment variables with no fallbacks for user and password
+const user = process.env.POSTGRES_USER || "";
+const password = process.env.POSTGRES_PASSWORD ? encodeURIComponent(process.env.POSTGRES_PASSWORD) : "";
 const host = process.env.POSTGRES_HOST || "localhost";
 const port = process.env.POSTGRES_PORT || "5432";
 const database = process.env.POSTGRES_DATABASE || "comics_db";
