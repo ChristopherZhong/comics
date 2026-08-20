@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { ProgressService } from './progress.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -15,7 +15,7 @@ export class ProgressController {
   @Post('update')
   async updateProgress(
     @Request() req: any,
-    @Body('chapterId', ParseIntPipe) chapterId: number,
+    @Body('chapterId') chapterId: string,
     @Body('status') status: any
   ) {
     return this.progressService.updateProgress(req.user.userId, chapterId, status);

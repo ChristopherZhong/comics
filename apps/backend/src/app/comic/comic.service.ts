@@ -15,7 +15,7 @@ export class ComicService {
     });
   }
 
-  async getComicById(id: number) {
+  async getComicById(id: string) {
     return this.prisma.comic.findUnique({
       where: { id },
       include: {
@@ -38,7 +38,7 @@ export class ComicService {
   }
 
   async addChapter(
-    comicId: number,
+    comicId: string,
     data: { title: string; chapterNumber: number; pagesCount: number }
   ) {
     return this.prisma.chapter.create({
@@ -51,7 +51,7 @@ export class ComicService {
     });
   }
 
-  async deleteComic(id: number) {
+  async deleteComic(id: string) {
     return this.prisma.comic.delete({ where: { id } });
   }
 }

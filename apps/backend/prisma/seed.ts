@@ -1,4 +1,4 @@
-import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaClient } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -9,7 +9,7 @@ async function main() {
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
 
-  console.log('Seeding database...');
+  console.log('Seeding database with UUIDv7 schema...');
 
   // Clear existing data to support clean re-runs
   await prisma.readingEventLog.deleteMany({});
@@ -28,7 +28,7 @@ async function main() {
     data: { name: 'USER' },
   });
 
-  console.log('Roles created/upserted:', { adminRole, userRole });
+  console.log('Roles created:', { adminRole, userRole });
 
   // 2. Users
   const adminPassword = await bcrypt.hash('admin123', 10);
@@ -50,7 +50,7 @@ async function main() {
     },
   });
 
-  console.log('Users created/upserted:', { adminUser, normalUser });
+  console.log('Users created:', { adminUser, normalUser });
 
   // 3. Comics & Chapters
   const comic1 = await prisma.comic.create({

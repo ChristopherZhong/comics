@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { ProgressStatus } from '../../generated/prisma/enums.js';
+import { ProgressStatus } from '../../generated/prisma/enums';
 
 @Injectable()
 export class ProgressService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserProgress(userId: number) {
+  async getUserProgress(userId: string) {
     return this.prisma.readingProgress.findMany({
       where: { userId },
       include: {
@@ -17,7 +17,7 @@ export class ProgressService {
     });
   }
 
-  async updateProgress(userId: number, chapterId: number, status: ProgressStatus) {
+  async updateProgress(userId: string, chapterId: string, status: ProgressStatus) {
     // 1. Upsert reading progress status
     const progress = await this.prisma.readingProgress.upsert({
       where: {
@@ -39,7 +39,7 @@ export class ProgressService {
     return progress;
   }
 
-  async getEventLogs(userId?: number) {
+  async getEventLogs(userId?: string) {
     return this.prisma.readingEventLog.findMany({
       where: userId ? { userId } : {},
       orderBy: { timestamp: 'desc' },

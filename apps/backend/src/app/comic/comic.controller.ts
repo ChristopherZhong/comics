@@ -6,7 +6,6 @@ import {
   Body,
   Param,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { ComicService } from './comic.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -23,7 +22,7 @@ export class ComicController {
   }
 
   @Get(':id')
-  async getComicById(@Param('id', ParseIntPipe) id: number) {
+  async getComicById(@Param('id') id: string) {
     return this.comicService.getComicById(id);
   }
 
@@ -38,7 +37,7 @@ export class ComicController {
   @Roles('ADMIN')
   @Post(':id/chapters')
   async addChapter(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() body: any
   ) {
     return this.comicService.addChapter(id, body);
@@ -47,7 +46,7 @@ export class ComicController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
-  async deleteComic(@Param('id', ParseIntPipe) id: number) {
+  async deleteComic(@Param('id') id: string) {
     return this.comicService.deleteComic(id);
   }
 }

@@ -2,14 +2,14 @@ import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 interface Chapter {
-  id: number;
+  id: string;
   title: string;
   chapterNumber: number;
   pagesCount: number;
 }
 
 interface Comic {
-  id: number;
+  id: string;
   title: string;
   description: string;
   publisher: string;
@@ -20,7 +20,7 @@ interface Comic {
 }
 
 interface Log {
-  id: number;
+  id: string;
   user: { email: string };
   chapter: {
     title: string;
@@ -380,7 +380,7 @@ export class AppRoot extends LitElement {
   // Data states
   @state() comics: Comic[] = [];
   @state() activeComic: Comic | null = null;
-  @state() progress: Record<number, 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED'> = {};
+  @state() progress: Record<string, 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED'> = {};
   @state() logs: Log[] = [];
 
   // Admin Create states
@@ -440,8 +440,8 @@ export class AppRoot extends LitElement {
         headers: { Authorization: `Bearer ${this.token}` },
       });
       if (res.ok) {
-        const list: { chapterId: number; status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED' }[] = await res.json() as any;
-        const map: Record<number, 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED'> = {};
+        const list: { chapterId: string; status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED' }[] = await res.json() as any;
+        const map: Record<string, 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED'> = {};
         for (const item of list) {
           map[item.chapterId] = item.status;
         }
@@ -510,7 +510,7 @@ export class AppRoot extends LitElement {
     localStorage.removeItem('token');
   }
 
-  async handleStatusChange(chapterId: number, status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED') {
+  async handleStatusChange(chapterId: string, status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED') {
     if (!this.token) {
       window.alert('You must be logged in to update your progress.');
       return;
@@ -605,7 +605,7 @@ export class AppRoot extends LitElement {
     }
   }
 
-  async handleDeleteComic(id: number) {
+  async handleDeleteComic(id: string) {
     if (!window.confirm('Are you sure you want to delete this comic and all of its chapters?')) return;
     try {
       const res = await fetch(`/api/comics/${id}`, {
