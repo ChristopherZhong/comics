@@ -10,11 +10,14 @@ generator client {
 
 model Role {
   // standard columns
-  id        String   @id @default(uuid(7))
-  createdAt DateTime @default(now()) @map("created_at")
+  id        String    @id @default(uuid(7))
+  createdAt DateTime  @default(now()) @map("created_at")
+  createdBy String?   @map("created_by")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  updatedBy String?   @map("updated_by")
 
   // model-specific columns
-  name      String   @unique
+  name      String    @unique
 
   // relations
   users     User[]
@@ -27,6 +30,9 @@ model User {
   // standard columns
   id               String            @id @default(uuid(7))
   createdAt        DateTime          @default(now()) @map("created_at")
+  createdBy        String?           @map("created_by")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  updatedBy        String?           @map("updated_by")
 
   // model-specific columns
   email            String            @unique
@@ -34,9 +40,9 @@ model User {
   roleId           String            @map("role_id")
 
   // relations
-  role             Role              @relation(fields: [roleId], references: [id])
-  readingProgress  ReadingProgress[]
   readingEventLogs ReadingEventLog[]
+  readingProgress  ReadingProgress[]
+  role             Role              @relation(fields: [roleId], references: [id])
 
   // settings
   @@map("users")
@@ -46,14 +52,17 @@ model Comic {
   // standard columns
   id          String    @id @default(uuid(7))
   createdAt   DateTime  @default(now()) @map("created_at")
+  createdBy   String?   @map("created_by")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  updatedBy   String?   @map("updated_by")
 
   // model-specific columns
-  title       String
+  artist      String?
+  coverUrl    String?   @map("cover_url")
   description String?
   publisher   String?
-  coverUrl    String?   @map("cover_url")
+  title       String
   writer      String?
-  artist      String?
 
   // relations
   chapters    Chapter[]
@@ -66,17 +75,20 @@ model Chapter {
   // standard columns
   id              String            @id @default(uuid(7))
   createdAt       DateTime          @default(now()) @map("created_at")
+  createdBy       String?           @map("created_by")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  updatedBy       String?           @map("updated_by")
 
   // model-specific columns
-  comicId         String            @map("comic_id")
-  title           String
   chapterNumber   Float             @map("chapter_number")
+  comicId         String            @map("comic_id")
   pagesCount      Int               @default(0) @map("pages_count")
+  title           String
 
   // relations
   comic           Comic             @relation(fields: [comicId], references: [id], onDelete: Cascade)
-  readingProgress ReadingProgress[]
   readingLogs     ReadingEventLog[]
+  readingProgress ReadingProgress[]
 
   // settings
   @@map("chapters")
@@ -91,16 +103,19 @@ enum ProgressStatus {
 model ReadingProgress {
   // standard columns
   id        String         @id @default(uuid(7))
+  createdAt DateTime       @default(now()) @map("created_at")
+  createdBy String?        @map("created_by")
   updatedAt DateTime       @updatedAt @map("updated_at")
+  updatedBy String?        @map("updated_by")
 
   // model-specific columns
-  userId    String         @map("user_id")
   chapterId String         @map("chapter_id")
   status    ProgressStatus @default(UNREAD)
+  userId    String         @map("user_id")
 
   // relations
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   chapter   Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // settings
   @@unique([userId, chapterId])
@@ -110,16 +125,20 @@ model ReadingProgress {
 model ReadingEventLog {
   // standard columns
   id        String         @id @default(uuid(7))
-  timestamp DateTime       @default(now()) @map("timestamp")
+  createdAt DateTime       @default(now()) @map("created_at")
+  createdBy String?        @map("created_by")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  updatedBy String?        @map("updated_by")
 
   // model-specific columns
-  userId    String         @map("user_id")
   chapterId String         @map("chapter_id")
   status    ProgressStatus
+  timestamp DateTime       @default(now())
+  userId    String         @map("user_id")
 
   // relations
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   chapter   Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // settings
   @@map("reading_event_logs")
