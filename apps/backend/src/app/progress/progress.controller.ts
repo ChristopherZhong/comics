@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Query } from '@nestjs/common';
 import { ProgressService } from './progress.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -22,12 +22,16 @@ export class ProgressController {
   }
 
   @Get('logs')
-  async getMyLogs(@Request() req: any) {
-    return this.progressService.getEventLogs(req.user.userId);
+  async getMyLogs(
+    @Request() req: any,
+    @Query('page') page = 1,
+    @Query('limit') limit = 20
+  ) {
+    return this.progressService.getEventLogs(req.user.userId, page, limit);
   }
 
   @Get('logs/all')
-  async getAllLogs() {
-    return this.progressService.getEventLogs();
+  async getAllLogs(@Query('page') page = 1, @Query('limit') limit = 20) {
+    return this.progressService.getEventLogs(undefined, page, limit);
   }
 }

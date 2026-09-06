@@ -39,16 +39,33 @@ export class ProgressService {
     return progress;
   }
 
-  async getEventLogs(userId?: string) {
-    return this.prisma.readingEventLog.findMany({
-      where: userId ? { userId } : {},
-      orderBy: { timestamp: 'desc' },
-      include: {
-        user: { select: { email: true } },
-        chapter: {
-          include: { comic: true },
+  async getEventLogs(userId?: string, page = 1, limit = 20) {
+    const take = Number(limit);
+    const skip = (Number(page) - 1) * take;
+    const where = userId ? { userId } : {};
+
+    const [items, total] = await Promise.all([
+      this.prisma.readingEventLog.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { timestamp: 'desc' },
+        include: {
+          user: { select: { email: true } },
+          chapter: {
+            include: { comic: true },
+          },
         },
-      },
-    });
+      }),
+      this.prisma.readingEventLog.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page: Number(page),
+      limit: take,
+      totalPages: Math.ceil(total / take),
+    };
   }
 }

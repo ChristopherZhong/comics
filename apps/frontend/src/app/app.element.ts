@@ -367,7 +367,7 @@ export class AppRoot extends LitElement {
   `;
 
   @state() token = localStorage.getItem('token') || '';
-  @state() user: { email: string; role: string } | null = null;
+  @state() user: { email: string; role: string; roles?: string[] } | null = null;
   @state() authMode: 'login' | 'register' = 'login';
   @state() currentTab: 'library' | 'logs' | 'admin' = 'library';
 
@@ -404,10 +404,14 @@ export class AppRoot extends LitElement {
     }
   }
 
+  get authHeader() {
+    return this.token ? { Authorization: `Bearer ${this.token}` } : {};
+  }
+
   async fetchProfile() {
     try {
       const res = await fetch('/api/auth/profile', {
-        headers: { Authorization: `Bearer ${this.token}` },
+        headers: this.authHeader as any,
       });
       if (res.ok) {
         this.user = await res.json() as any;
@@ -424,9 +428,12 @@ export class AppRoot extends LitElement {
 
   async fetchComics() {
     try {
-      const res = await fetch('/api/comics');
+      const res = await fetch('/api/comics', {
+        headers: this.authHeader as any,
+      });
       if (res.ok) {
-        this.comics = await res.json() as any;
+        const data = await res.json() as any;
+        this.comics = Array.isArray(data) ? data : data.items || [];
       }
     } catch (err) {
       console.error(err);
@@ -437,7 +444,7 @@ export class AppRoot extends LitElement {
     if (!this.token) return;
     try {
       const res = await fetch('/api/progress', {
-        headers: { Authorization: `Bearer ${this.token}` },
+        headers: this.authHeader as any,
       });
       if (res.ok) {
         const list: { chapterId: string; status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED' }[] = await res.json() as any;
@@ -455,12 +462,14 @@ export class AppRoot extends LitElement {
   async fetchLogs() {
     if (!this.token) return;
     try {
-      const endpoint = this.user?.role === 'ADMIN' ? '/api/progress/logs/all' : '/api/progress/logs';
+      const isAdmin = this.user?.role === 'ADMIN' || this.user?.roles?.includes('ADMIN');
+      const endpoint = isAdmin ? '/api/progress/logs/all' : '/api/progress/logs';
       const res = await fetch(endpoint, {
-        headers: { Authorization: `Bearer ${this.token}` },
+        headers: this.authHeader as any,
       });
       if (res.ok) {
-        this.logs = await res.json() as any;
+        const data = await res.json() as any;
+        this.logs = Array.isArray(data) ? data : data.items || [];
       }
     } catch (err) {
       console.error(err);
@@ -520,7 +529,7 @@ export class AppRoot extends LitElement {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
+          ...this.authHeader,
         },
         body: JSON.stringify({ chapterId, status }),
       });
@@ -540,7 +549,7 @@ export class AppRoot extends LitElement {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
+          ...this.authHeader,
         },
         body: JSON.stringify({
           title: this.newComicTitle,
@@ -573,13 +582,14 @@ export class AppRoot extends LitElement {
     e.preventDefault();
     if (!this.activeComic) return;
     try {
-      const res = await fetch(`/api/comics/${this.activeComic.id}/chapters`, {
+      const res = await fetch('/api/chapters', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.token}`,
+          ...this.authHeader,
         },
         body: JSON.stringify({
+          comicId: this.activeComic.id,
           title: this.newChapterTitle,
           chapterNumber: parseFloat(this.newChapterNum),
           pagesCount: parseInt(this.newChapterPages, 10),
@@ -587,7 +597,9 @@ export class AppRoot extends LitElement {
       });
       if (res.ok) {
         // Refresh active comic to include the new chapter
-        const updated = await fetch(`/api/comics/${this.activeComic.id}`);
+        const updated = await fetch(`/api/comics/${this.activeComic.id}`, {
+          headers: this.authHeader as any,
+        });
         if (updated.ok) {
           this.activeComic = await updated.json() as any;
         }
@@ -610,7 +622,7 @@ export class AppRoot extends LitElement {
     try {
       const res = await fetch(`/api/comics/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${this.token}` },
+        headers: this.authHeader as any,
       });
       if (res.ok) {
         if (this.activeComic?.id === id) {
@@ -665,6 +677,7 @@ export class AppRoot extends LitElement {
   renderLibraryTab() {
     if (this.activeComic) {
       const isProgressOwner = !!this.user;
+      const isAdmin = this.user?.role === 'ADMIN' || this.user?.roles?.includes('ADMIN');
       return html`
         <div>
           <button class="secondary" style="margin-bottom: 1.5rem;" @click=${() => this.activeComic = null}>
@@ -716,7 +729,7 @@ export class AppRoot extends LitElement {
             </div>
           </div>
 
-          ${this.user?.role === 'ADMIN' ? html`
+          ${isAdmin ? html`
             <div class="card">
               <h3>Admin: Add Chapter</h3>
               <form @submit=${this.handleAddChapter}>
@@ -742,6 +755,8 @@ export class AppRoot extends LitElement {
       `;
     }
 
+    const isAdmin = this.user?.role === 'ADMIN' || this.user?.roles?.includes('ADMIN');
+
     return html`
       <div>
         <h2 style="color: #1e293b; margin-bottom: 1.5rem;">All Comics</h2>
@@ -757,7 +772,7 @@ export class AppRoot extends LitElement {
                 </div>
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                   <button @click=${() => this.activeComic = c}>View Details</button>
-                  ${this.user?.role === 'ADMIN' ? html`
+                  ${isAdmin ? html`
                     <button class="danger" @click=${() => this.handleDeleteComic(c.id)}>Delete</button>
                   ` : ''}
                 </div>
@@ -770,9 +785,10 @@ export class AppRoot extends LitElement {
   }
 
   renderLogsTab() {
+    const isAdmin = this.user?.role === 'ADMIN' || this.user?.roles?.includes('ADMIN');
     return html`
       <div class="card">
-        <h3>${this.user?.role === 'ADMIN' ? 'Global Activity History' : 'My Reading Progress Logs'}</h3>
+        <h3>${isAdmin ? 'Global Activity History' : 'My Reading Progress Logs'}</h3>
         <div style="margin-top: 1rem;">
           ${this.logs.length === 0 ? html`
             <p style="color: #64748b; font-style: italic;">No activities logged yet.</p>
@@ -842,6 +858,8 @@ export class AppRoot extends LitElement {
       return this.renderAuth();
     }
 
+    const isAdmin = this.user?.role === 'ADMIN' || this.user?.roles?.includes('ADMIN');
+
     return html`
       <header>
         <h1>Comics Reading Tracker</h1>
@@ -864,7 +882,7 @@ export class AppRoot extends LitElement {
             <button class="nav-tab ${this.currentTab === 'logs' ? 'active' : ''}" @click=${() => this.currentTab = 'logs'}>
               Activity Logs
             </button>
-            ${this.user.role === 'ADMIN' ? html`
+            ${isAdmin ? html`
               <button class="nav-tab ${this.currentTab === 'admin' ? 'active' : ''}" @click=${() => this.currentTab = 'admin'}>
                 Admin Panel
               </button>

@@ -9,44 +9,48 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ComicService } from './comic.service';
+import { ChapterService } from './chapter.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 
-@Controller('comics')
+@Controller('chapters')
 @UseGuards(JwtAuthGuard)
-export class ComicController {
-  constructor(private comicService: ComicService) {}
+export class ChapterController {
+  constructor(private chapterService: ChapterService) {}
 
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Post()
   async create(@Body() body: any) {
-    return this.comicService.create(body);
+    return this.chapterService.create(body);
   }
 
   @Get()
-  async findMany(@Query('page') page = 1, @Query('limit') limit = 20) {
-    return this.comicService.findMany(page, limit);
+  async findMany(
+    @Query('comicId') comicId?: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 20
+  ) {
+    return this.chapterService.findMany(comicId, page, limit);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.comicService.findOne(id);
+    return this.chapterService.findOne(id);
   }
 
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Put(':id')
   async update(@Param('id') id: string, @Body() body: any) {
-    return this.comicService.update(id, body);
+    return this.chapterService.update(id, body);
   }
 
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.comicService.remove(id);
+    return this.chapterService.remove(id);
   }
 }
