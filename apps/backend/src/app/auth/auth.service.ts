@@ -13,7 +13,7 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.prisma.user.findUnique({
       where: { email },
-      include: { role: true },
+      include: { roles: true },
     });
     if (user && (await bcrypt.compare(pass, user.password))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -24,13 +24,15 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user.id, role: user.role.name };
+    const roles = user.roles.map((r: any) => r.name);
+    const payload = { email: user.email, sub: user.id, roles, role: roles[0] || 'USER' };
     return {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
         email: user.email,
-        role: user.role.name,
+        roles,
+        role: roles[0] || 'USER',
       },
     };
   }
@@ -51,9 +53,11 @@ export class AuthService {
       data: {
         email,
         password: hashedPassword,
-        roleId: role.id,
+        roles: {
+          connect: [{ id: role.id }],
+        },
       },
-      include: { role: true },
+      include: { roles: true },
     });
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

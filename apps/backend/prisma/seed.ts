@@ -12,7 +12,7 @@ async function main() {
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
 
-  console.log('Seeding database with UUIDv7 schema...');
+  console.log('Seeding database with UUIDv7 schema and Many-to-Many Roles...');
 
   // Clear existing data to support clean re-runs
   await prisma.readingEventLog.deleteMany({});
@@ -41,16 +41,22 @@ async function main() {
     data: {
       email: 'admin@comics.com',
       password: adminPassword,
-      roleId: adminRole.id,
+      roles: {
+        connect: [{ id: adminRole.id }, { id: userRole.id }],
+      },
     },
+    include: { roles: true },
   });
 
   const normalUser = await prisma.user.create({
     data: {
       email: 'user@comics.com',
       password: userPassword,
-      roleId: userRole.id,
+      roles: {
+        connect: [{ id: userRole.id }],
+      },
     },
+    include: { roles: true },
   });
 
   console.log('Users created:', { adminUser, normalUser });

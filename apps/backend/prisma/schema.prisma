@@ -37,12 +37,11 @@ model User {
   // model-specific columns
   email            String            @unique
   password         String
-  roleId           String            @map("role_id")
 
   // relations
   readingEventLogs ReadingEventLog[]
   readingProgress  ReadingProgress[]
-  role             Role              @relation(fields: [roleId], references: [id])
+  roles            Role[]
 
   // settings
   @@map("users")
