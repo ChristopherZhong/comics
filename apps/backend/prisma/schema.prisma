@@ -47,24 +47,61 @@ model User {
   @@map("users")
 }
 
-model Comic {
+enum PublicationStatus {
+  HIATUS
+  ONGOING
+  COMPLETED
+}
+
+enum ComicType {
+  MANHUA
+  MANHWA
+  MANGA
+  COMIC
+  OTHER
+}
+
+model ScanlationGroup {
   // standard columns
-  id          String    @id @default(uuid(7))
-  createdAt   DateTime  @default(now()) @map("created_at")
-  createdBy   String?   @map("created_by")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  updatedBy   String?   @map("updated_by")
+  id        String   @id @default(uuid(7))
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by")
 
   // model-specific columns
-  artist      String?
-  coverUrl    String?   @map("cover_url")
-  description String?
-  publisher   String?
-  title       String
-  writer      String?
+  name      String   @unique
+  website   String?
 
   // relations
-  chapters    Chapter[]
+  comics    Comic[]
+
+  // settings
+  @@map("scanlation_groups")
+}
+
+model Comic {
+  // standard columns
+  id               String            @id @default(uuid(7))
+  createdAt        DateTime          @default(now()) @map("created_at")
+  createdBy        String?           @map("created_by")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  updatedBy        String?           @map("updated_by")
+
+  // model-specific columns
+  artist           String?
+  coverUrl         String?           @map("cover_url")
+  description      String?
+  language         String?           @default("English")
+  publisher        String?
+  status           PublicationStatus @default(ONGOING)
+  title            String
+  type             ComicType         @default(COMIC)
+  writer           String?
+
+  // relations
+  chapters         Chapter[]
+  scanlationGroups ScanlationGroup[]
 
   // settings
   @@map("comics")

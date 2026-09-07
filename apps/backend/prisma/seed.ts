@@ -12,13 +12,14 @@ async function main() {
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
 
-  console.log('Seeding database with UUIDv7 schema and Many-to-Many Roles...');
+  console.log('Seeding database with updated schema...');
 
-  // Clear existing data to support clean re-runs
+  // Clear existing data
   await prisma.readingEventLog.deleteMany({});
   await prisma.readingProgress.deleteMany({});
   await prisma.chapter.deleteMany({});
   await prisma.comic.deleteMany({});
+  await prisma.scanlationGroup.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.role.deleteMany({});
 
@@ -61,7 +62,22 @@ async function main() {
 
   console.log('Users created:', { adminUser, normalUser });
 
-  // 3. Comics & Chapters
+  // 3. Scanlation Groups
+  const group1 = await prisma.scanlationGroup.create({
+    data: {
+      name: 'Asura Scans',
+      website: 'https://asuracomic.net',
+    },
+  });
+
+  const group2 = await prisma.scanlationGroup.create({
+    data: {
+      name: 'Flame Scans',
+      website: 'https://flamescans.org',
+    },
+  });
+
+  // 4. Comics & Chapters
   const comic1 = await prisma.comic.create({
     data: {
       title: 'The Amazing Spiderman',
@@ -70,6 +86,12 @@ async function main() {
       coverUrl: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500&auto=format&fit=crop',
       writer: 'Stan Lee',
       artist: 'Steve Ditko',
+      language: 'English',
+      status: 'ONGOING',
+      type: 'COMIC',
+      scanlationGroups: {
+        connect: [{ id: group1.id }],
+      },
       chapters: {
         create: [
           { title: 'Spider-Man!', chapterNumber: 1, pagesCount: 24 },
@@ -82,16 +104,22 @@ async function main() {
 
   const comic2 = await prisma.comic.create({
     data: {
-      title: 'Batman: Year One',
-      description: 'A young Bruce Wayne returns to Gotham City to fight corruption and crime.',
-      publisher: 'DC Comics',
+      title: 'Solo Leveling',
+      description: 'In a world where hunters must battle deadly monsters, weak hunter Sung Jinwoo is chosen by a mysterious system.',
+      publisher: 'D&C Media',
       coverUrl: 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=500&auto=format&fit=crop',
-      writer: 'Frank Miller',
-      artist: 'David Mazzucchelli',
+      writer: 'Chugong',
+      artist: 'DUBU',
+      language: 'Korean',
+      status: 'COMPLETED',
+      type: 'MANHWA',
+      scanlationGroups: {
+        connect: [{ id: group1.id }, { id: group2.id }],
+      },
       chapters: {
         create: [
-          { title: 'Chapter 1: Who I Am', chapterNumber: 1, pagesCount: 28 },
-          { title: 'Chapter 2: War is Declared', chapterNumber: 2, pagesCount: 26 },
+          { title: 'Chapter 1: The E-Rank Hunter', chapterNumber: 1, pagesCount: 28 },
+          { title: 'Chapter 2: Double Dungeon', chapterNumber: 2, pagesCount: 26 },
         ],
       },
     },

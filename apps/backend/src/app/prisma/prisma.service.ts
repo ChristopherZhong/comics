@@ -8,7 +8,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
   private static pool: Pool;
 
   constructor() {
-    const connectionString = process.env.DATABASE_URL || 'postgresql://comics_user:comics_password@localhost:5432/comics_db?schema=public';
+    const connectionString = process.env.DATABASE_URL;
+    if (!connectionString) {
+      throw new Error('DATABASE_URL environment variable is missing.');
+    }
     if (!PrismaService.pool) {
       PrismaService.pool = new Pool({ connectionString });
     }

@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ComicService } from './comic.service';
+import { CreateComic } from './dto/create-comic.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -22,13 +23,17 @@ export class ComicController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Post()
-  async create(@Body() body: any) {
+  async create(@Body() body: CreateComic) {
     return this.comicService.create(body);
   }
 
   @Get()
-  async findMany(@Query('page') page = 1, @Query('limit') limit = 20) {
-    return this.comicService.findMany(page, limit);
+  async findMany(
+    @Query('page') page?: number,
+    @Query('limit') limit = 20,
+    @Query('cursor') cursor?: string
+  ) {
+    return this.comicService.findMany({ page, limit, cursor });
   }
 
   @Get(':id')
@@ -39,7 +44,7 @@ export class ComicController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Put(':id')
-  async update(@Param('id') id: string, @Body() body: any) {
+  async update(@Param('id') id: string, @Body() body: Partial<CreateComic>) {
     return this.comicService.update(id, body);
   }
 
