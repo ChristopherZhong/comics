@@ -1,88 +1,44 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateComic } from './dto/create-comic.dto';
-
-export interface PaginationOptions {
-  page?: number;
-  limit?: number;
-  cursor?: string;
-}
+import { transformCreateComic } from './transformations';
+import { FindManyOptions } from './dto/find-many-options.dto';
+import {
+  CursorPaginationStrategy,
+  OffsetPaginationStrategy,
+  PaginationResult,
+} from '../common/pagination/pagination.strategy';
+import { Comic } from './entities/comic.entity';
 
 @Injectable()
 export class ComicService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateComic) {
-    const { scanlationGroupIds, ...comicData } = data;
+    const prismaData = transformCreateComic(data);
     return this.prisma.comic.create({
-      data: {
-        ...comicData,
-        scanlationGroups: scanlationGroupIds
-          ? { connect: scanlationGroupIds.map((id) => ({ id })) }
-          : undefined,
-      },
+      data: prismaData as any,
       include: {
         scanlationGroups: true,
       },
     });
   }
 
-  async findMany(options: PaginationOptions = {}) {
-    const { page, limit = 20, cursor } = options;
-    const take = Number(limit);
+  async findMany(options: FindManyOptions = {}): Promise<PaginationResult<Comic>> {
+    const pagination = options.pagination || {};
+    const queryInclude = {
+      chapters: {
+        orderBy: { chapterNumber: 'asc' },
+      },
+      scanlationGroups: true,
+    };
 
-    if (cursor) {
-      // Cursor-based pagination
-      const items = await this.prisma.comic.findMany({
-        take: take + 1, // Fetch one extra to determine if there is a next page
-        cursor: { id: cursor },
-        include: {
-          chapters: {
-            orderBy: { chapterNumber: 'asc' },
-          },
-          scanlationGroups: true,
-        },
-        orderBy: { id: 'asc' },
-      });
-
-      let nextCursor: string | undefined = undefined;
-      if (items.length > take) {
-        const nextItem = items.pop();
-        nextCursor = nextItem?.id;
-      }
-
-      return {
-        items,
-        nextCursor,
-        limit: take,
-      };
+    if (pagination.cursor) {
+      const strategy = new CursorPaginationStrategy<Comic>();
+      return strategy.paginate(this.prisma, 'comic', pagination, queryInclude);
     } else {
-      // Offset-based pagination
-      const currentPage = Number(page || 1);
-      const skip = (currentPage - 1) * take;
-
-      const [items, total] = await Promise.all([
-        this.prisma.comic.findMany({
-          skip,
-          take,
-          include: {
-            chapters: {
-              orderBy: { chapterNumber: 'asc' },
-            },
-            scanlationGroups: true,
-          },
-          orderBy: { createdAt: 'desc' },
-        }),
-        this.prisma.comic.count(),
-      ]);
-
-      return {
-        items,
-        total,
-        page: currentPage,
-        limit: take,
-        totalPages: Math.ceil(total / take),
-      };
+      const strategy = new OffsetPaginationStrategy<Comic>();
+      return strategy.paginate(this.prisma, 'comic', pagination, queryInclude);
     }
   }
 

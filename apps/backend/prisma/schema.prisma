@@ -92,11 +92,11 @@ model Comic {
   artist           String?
   coverUrl         String?           @map("cover_url")
   description      String?
-  language         String?           @default("English")
+  language         String?           @map("language") // ISO 639-1 language code (e.g. "en", "ja", "ko")
   publisher        String?
-  status           PublicationStatus @default(ONGOING)
+  status           PublicationStatus
   title            String
-  type             ComicType         @default(COMIC)
+  type             ComicType
   writer           String?
 
   // relations
