@@ -30,27 +30,15 @@ export default [
           ],
         },
       ],
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@typescript-eslint/no-explicit-any': 'error',
       'id-length': [
         'error',
         {
-          min: 2,
           exceptions: ['i', 'j', 'x', 'y', 'z', '_', 'id'],
+          min: 2,
         },
       ],
     },
-  },
-  {
-    files: [
-      '**/*.ts',
-      '**/*.tsx',
-      '**/*.cts',
-      '**/*.mts',
-      '**/*.js',
-      '**/*.jsx',
-      '**/*.cjs',
-      '**/*.mjs',
-    ],
-    rules: {},
   },
 ];
