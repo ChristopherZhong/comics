@@ -1,11 +1,22 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UserEntity } from './entities/user.entity';
+
+interface JwtPayload {
+  sub: string;
+  email: string;
+  roles?: string[];
+  role?: string;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
-    const secret = process.env.JWT_SECRET || 'super-secret-jwt-key';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new UnauthorizedException('JWT_SECRET environment variable is missing.');
+    }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -13,12 +24,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload): Promise<UserEntity> {
+    const rolesList = payload.roles || (payload.role ? [payload.role] : []);
     return {
-      userId: payload.sub,
       email: payload.email,
-      roles: payload.roles || [payload.role],
-      role: payload.role || (payload.roles && payload.roles[0]),
+      id: payload.sub,
+      roles: rolesList,
     };
   }
 }

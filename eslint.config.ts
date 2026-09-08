@@ -11,6 +11,7 @@ export default [
       '**/vite.config.*.timestamp*',
       '**/vitest.config.*.timestamp*',
       '**/test-output',
+      '**/generated/**',
     ],
   },
   {
@@ -29,6 +30,14 @@ export default [
           ],
         },
       ],
+      '@typescript-eslint/no-explicit-any': 'error',
+      'id-length': [
+        'error',
+        {
+          min: 2,
+          exceptions: ['i', 'j', 'x', 'y', 'z', '_', 'id'],
+        },
+      ],
     },
   },
   {
@@ -42,7 +51,6 @@ export default [
       '**/*.cjs',
       '**/*.mjs',
     ],
-    // Override or add rules here
     rules: {},
   },
 ];

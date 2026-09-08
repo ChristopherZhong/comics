@@ -1,12 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-
 export class RegisterDto {
-  @ApiProperty({ description: 'User email address', example: 'user@example.com' })
+  /** User email address */
   email: string;
 
-  @ApiProperty({ description: 'User password', example: 'secret123' })
+  /** User password */
   password: string;
 
-  @ApiPropertyOptional({ description: 'Role name', example: 'USER', default: 'USER' })
-  role?: string;
+  /** List of role names assigned to the user */
+  roles?: string[];
 }

@@ -20,6 +20,18 @@ module.exports = {
       outputHashing: 'none',
       generatePackageJson: false,
       sourceMap: true,
+      transformers: [
+        {
+          name: '@nestjs/swagger/plugin',
+          options: {
+            dtoFileNameSuffix: ['.dto.ts', '.entity.ts'],
+            controllerFileNameSuffix: ['.controller.ts'],
+            classValidatorShim: true,
+            dtoKeyOfComment: 'description',
+            introspectComments: true,
+          },
+        },
+      ],
     }),
   ],
 };

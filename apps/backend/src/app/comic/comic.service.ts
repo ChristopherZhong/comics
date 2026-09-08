@@ -14,10 +14,10 @@ import { Comic } from './entities/comic.entity';
 export class ComicService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateComic) {
+  async create(data: CreateComic): Promise<Comic> {
     const prismaData = transformCreateComic(data);
     return this.prisma.comic.create({
-      data: prismaData as any,
+      data: prismaData,
       include: {
         scanlationGroups: true,
       },
@@ -42,35 +42,35 @@ export class ComicService {
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Comic | null> {
     return this.prisma.comic.findUnique({
-      where: { id },
       include: {
         chapters: {
           orderBy: { chapterNumber: 'asc' },
         },
         scanlationGroups: true,
       },
+      where: { id },
     });
   }
 
-  async update(id: string, data: Partial<CreateComic>) {
+  async update(id: string, data: Partial<CreateComic>): Promise<Comic> {
     const { scanlationGroupIds, ...comicData } = data;
     return this.prisma.comic.update({
-      where: { id },
       data: {
         ...comicData,
         scanlationGroups: scanlationGroupIds
-          ? { set: scanlationGroupIds.map((id) => ({ id })) }
+          ? { set: scanlationGroupIds.map((groupId) => ({ id: groupId })) }
           : undefined,
       },
       include: {
         scanlationGroups: true,
       },
+      where: { id },
     });
   }
 
-  async remove(id: string) {
+  async remove(id: string): Promise<Comic> {
     return this.prisma.comic.delete({ where: { id } });
   }
 }

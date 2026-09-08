@@ -136,7 +136,7 @@ main()
     console.log('Seeding finished successfully.');
     process.exit(0);
   })
-  .catch((e) => {
-    console.error('Error seeding database:', e);
+  .catch((error) => {
+    console.error('Error seeding database:', error);
     process.exit(1);
   });

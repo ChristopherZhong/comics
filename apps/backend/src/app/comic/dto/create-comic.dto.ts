@@ -1,34 +1,40 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PublicationStatus, ComicType } from '../../../generated/prisma/enums';
+import { PartialType, PickType } from '@nestjs/swagger';
+import { Comic } from '../entities/comic.entity';
 
-export class CreateComic {
-  @ApiProperty({ description: 'Title of the comic' })
-  title: string;
+export class CreateComicBase extends PickType(Comic, ['title'] as const) {}
 
-  @ApiPropertyOptional({ description: 'Detailed description of the comic' })
-  description?: string;
+export class CreateComicOptional extends PartialType(
+  PickType(Comic, [
+    'artist',
+    'coverUrl',
+    'description',
+    'language',
+    'publisher',
+    'status',
+    'type',
+    'writer',
+  ] as const)
+) {}
 
-  @ApiPropertyOptional({ description: 'Publisher of the comic' })
-  publisher?: string;
+export class CreateComic extends CreateComicBase {
+  /** Detailed description of the comic */
+  override description?: string;
 
-  @ApiPropertyOptional({ description: 'Cover image URL' })
-  coverUrl?: string;
+  /** Publisher of the comic */
+  override publisher?: string;
 
-  @ApiPropertyOptional({ description: 'Writer of the comic' })
-  writer?: string;
+  /** Cover image URL */
+  override coverUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Artist of the comic' })
-  artist?: string;
+  /** Writer of the comic */
+  override writer?: string;
 
-  @ApiPropertyOptional({ description: 'ISO 639-1 language code (e.g. "en", "ja", "ko")', example: 'en' })
-  language?: string;
+  /** Artist of the comic */
+  override artist?: string;
 
-  @ApiPropertyOptional({ enum: PublicationStatus, enumName: 'PublicationStatus', description: 'Publication status' })
-  status?: PublicationStatus;
+  /** ISO 639-1 language code (e.g. "en", "ja", "ko") */
+  override language?: string;
 
-  @ApiPropertyOptional({ enum: ComicType, enumName: 'ComicType', description: 'Type of comic' })
-  type?: ComicType;
-
-  @ApiPropertyOptional({ type: [String], description: 'List of Scanlation Group IDs translating this comic' })
+  /** List of Scanlation Group IDs translating this comic */
   scanlationGroupIds?: string[];
 }

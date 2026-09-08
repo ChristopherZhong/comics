@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
 import { Comic } from './entities/comic.entity';
+import { PaginationResult } from '../common/pagination/pagination.strategy';
 
 @ApiTags('comics')
 @ApiBearerAuth()
@@ -30,18 +31,20 @@ export class ComicController {
   @Post()
   @ApiOperation({ summary: 'Create a new comic series' })
   @ApiResponse({ status: 201, type: Comic })
-  async create(@Body() body: CreateComic) {
+  async create(@Body() body: CreateComic): Promise<Comic> {
     return this.comicService.create(body);
   }
 
   @Get()
   @ApiOperation({ summary: 'Find all comic series with pagination' })
-  async findMany(@Query() query: FindManyComicsDto) {
+  async findMany(
+    @Query() query: FindManyComicsDto
+  ): Promise<PaginationResult<Comic>> {
     return this.comicService.findMany({
       pagination: {
-        page: query.page,
-        limit: query.limit,
         cursor: query.cursor,
+        limit: query.limit,
+        page: query.page,
       },
     });
   }
@@ -49,7 +52,7 @@ export class ComicController {
   @Get(':id')
   @ApiOperation({ summary: 'Find comic series by ID' })
   @ApiResponse({ status: 200, type: Comic })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<Comic | null> {
     return this.comicService.findOne(id);
   }
 
@@ -57,7 +60,10 @@ export class ComicController {
   @Roles('ADMIN')
   @Patch(':id')
   @ApiOperation({ summary: 'Update a comic series' })
-  async update(@Param('id') id: string, @Body() body: Partial<CreateComic>) {
+  async update(
+    @Param('id') id: string,
+    @Body() body: Partial<CreateComic>
+  ): Promise<Comic> {
     return this.comicService.update(id, body);
   }
 
@@ -65,7 +71,7 @@ export class ComicController {
   @Roles('ADMIN')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a comic series' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string): Promise<Comic> {
     return this.comicService.remove(id);
   }
 }

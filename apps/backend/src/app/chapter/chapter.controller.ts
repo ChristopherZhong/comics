@@ -15,6 +15,7 @@ import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { FindManyChaptersDto } from './dto/find-many-options.dto';
 import { Chapter } from './entities/chapter.entity';
+import { PaginationResult } from '../common/pagination/pagination.strategy';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -31,19 +32,21 @@ export class ChapterController {
   @Post()
   @ApiOperation({ summary: 'Create a new chapter' })
   @ApiResponse({ status: 201, type: Chapter })
-  async create(@Body() body: CreateChapterDto) {
+  async create(@Body() body: CreateChapterDto): Promise<Chapter> {
     return this.chapterService.create(body);
   }
 
   @Get()
   @ApiOperation({ summary: 'Find chapters with pagination' })
-  async findMany(@Query() query: FindManyChaptersDto) {
+  async findMany(
+    @Query() query: FindManyChaptersDto
+  ): Promise<PaginationResult<Chapter>> {
     return this.chapterService.findMany({
       comicId: query.comicId,
       pagination: {
-        page: query.page,
-        limit: query.limit,
         cursor: query.cursor,
+        limit: query.limit,
+        page: query.page,
       },
     });
   }
@@ -51,7 +54,7 @@ export class ChapterController {
   @Get(':id')
   @ApiOperation({ summary: 'Find chapter by ID' })
   @ApiResponse({ status: 200, type: Chapter })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<Chapter | null> {
     return this.chapterService.findOne(id);
   }
 
@@ -60,7 +63,10 @@ export class ChapterController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update a chapter' })
   @ApiResponse({ status: 200, type: Chapter })
-  async update(@Param('id') id: string, @Body() body: UpdateChapterDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() body: UpdateChapterDto
+  ): Promise<Chapter> {
     return this.chapterService.update(id, body);
   }
 
@@ -68,7 +74,7 @@ export class ChapterController {
   @Roles('ADMIN')
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a chapter' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string): Promise<Chapter> {
     return this.chapterService.remove(id);
   }
 }

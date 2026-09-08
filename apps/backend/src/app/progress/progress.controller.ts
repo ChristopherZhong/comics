@@ -4,7 +4,15 @@ import { ProgressService } from './progress.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
 import { FindManyLogsDto } from './dto/find-many-logs.dto';
 import { ReadingProgress } from './entities/reading-progress.entity';
+import { ReadingEventLog } from './entities/reading-event-log.entity';
+import { PaginationResult } from '../common/pagination/pagination.strategy';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+
+interface AuthenticatedUserRequest {
+  user: {
+    id: string;
+  };
+}
 
 @ApiTags('progress')
 @ApiBearerAuth()
@@ -16,44 +24,48 @@ export class ProgressController {
   @Get()
   @ApiOperation({ summary: 'Get current user reading progress' })
   @ApiResponse({ status: 200, type: [ReadingProgress] })
-  async getMyProgress(@Request() req: any) {
-    return this.progressService.getUserProgress(req.user.userId);
+  async getMyProgress(
+    @Request() request: AuthenticatedUserRequest
+  ): Promise<ReadingProgress[]> {
+    return this.progressService.getUserProgress(request.user.id);
   }
 
   @Post('update')
   @ApiOperation({ summary: 'Update reading progress for a chapter' })
   @ApiResponse({ status: 200, type: ReadingProgress })
   async updateProgress(
-    @Request() req: any,
+    @Request() request: AuthenticatedUserRequest,
     @Body() dto: UpdateProgressDto
-  ) {
-    return this.progressService.updateProgress(req.user.userId, dto);
+  ): Promise<ReadingProgress> {
+    return this.progressService.updateProgress(request.user.id, dto);
   }
 
   @Get('logs')
   @ApiOperation({ summary: 'Get reading activity logs for current user' })
   async getMyLogs(
-    @Request() req: any,
+    @Request() request: AuthenticatedUserRequest,
     @Query() query: FindManyLogsDto
-  ) {
+  ): Promise<PaginationResult<ReadingEventLog>> {
     return this.progressService.getEventLogs({
-      userId: req.user.userId,
       pagination: {
-        page: query.page,
-        limit: query.limit,
         cursor: query.cursor,
+        limit: query.limit,
+        page: query.page,
       },
+      userId: request.user.id,
     });
   }
 
   @Get('logs/all')
   @ApiOperation({ summary: 'Get all reading activity logs across all users' })
-  async getAllLogs(@Query() query: FindManyLogsDto) {
+  async getAllLogs(
+    @Query() query: FindManyLogsDto
+  ): Promise<PaginationResult<ReadingEventLog>> {
     return this.progressService.getEventLogs({
       pagination: {
-        page: query.page,
-        limit: query.limit,
         cursor: query.cursor,
+        limit: query.limit,
+        page: query.page,
       },
     });
   }

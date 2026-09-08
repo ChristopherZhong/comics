@@ -63,17 +63,18 @@ enum ComicType {
 
 model ScanlationGroup {
   // standard columns
-  id        String   @id @default(uuid(7))
-  createdAt DateTime @default(now()) @map("created_at")
-  createdBy String?  @map("created_by")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  updatedBy String?  @map("updated_by")
+  id        String    @id @default(uuid(7))
+  createdAt DateTime  @default(now()) @map("created_at")
+  createdBy String?   @map("created_by")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  updatedBy String?   @map("updated_by")
 
   // model-specific columns
-  name      String   @unique
+  name      String    @unique
   website   String?
 
   // relations
+  chapters  Chapter[]
   comics    Comic[]
 
   // settings
@@ -109,22 +110,24 @@ model Comic {
 
 model Chapter {
   // standard columns
-  id              String            @id @default(uuid(7))
-  createdAt       DateTime          @default(now()) @map("created_at")
-  createdBy       String?           @map("created_by")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  updatedBy       String?           @map("updated_by")
+  id                String            @id @default(uuid(7))
+  createdAt         DateTime          @default(now()) @map("created_at")
+  createdBy         String?           @map("created_by")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  updatedBy         String?           @map("updated_by")
 
   // model-specific columns
-  chapterNumber   Float             @map("chapter_number")
-  comicId         String            @map("comic_id")
-  pagesCount      Int               @default(0) @map("pages_count")
-  title           String
+  chapterNumber     Float             @map("chapter_number")
+  comicId           String            @map("comic_id")
+  pagesCount        Int               @default(0) @map("pages_count")
+  scanlationGroupId String?           @map("scanlation_group_id")
+  title             String
 
   // relations
-  comic           Comic             @relation(fields: [comicId], references: [id], onDelete: Cascade)
-  readingLogs     ReadingEventLog[]
-  readingProgress ReadingProgress[]
+  comic             Comic             @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  readingLogs       ReadingEventLog[]
+  readingProgress   ReadingProgress[]
+  scanlationGroup   ScanlationGroup?  @relation(fields: [scanlationGroupId], references: [id], onDelete: SetNull)
 
   // settings
   @@map("chapters")

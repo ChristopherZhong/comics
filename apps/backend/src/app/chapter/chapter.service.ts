@@ -15,7 +15,7 @@ import { Chapter } from './entities/chapter.entity';
 export class ChapterService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateChapterDto) {
+  async create(data: CreateChapterDto): Promise<Chapter> {
     const prismaData = transformCreateChapter(data);
     return this.prisma.chapter.create({
       data: prismaData,
@@ -52,21 +52,21 @@ export class ChapterService {
     }
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Chapter | null> {
     return this.prisma.chapter.findUnique({
-      where: { id },
       include: { comic: true },
-    });
-  }
-
-  async update(id: string, data: UpdateChapterDto) {
-    return this.prisma.chapter.update({
       where: { id },
-      data,
     });
   }
 
-  async remove(id: string) {
+  async update(id: string, data: UpdateChapterDto): Promise<Chapter> {
+    return this.prisma.chapter.update({
+      data,
+      where: { id },
+    });
+  }
+
+  async remove(id: string): Promise<Chapter> {
     return this.prisma.chapter.delete({ where: { id } });
   }
 }

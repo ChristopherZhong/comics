@@ -1,14 +1,13 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
 import { FindManyOptions, PaginationOptions } from '../../comic/dto/find-many-options.dto';
 
 export class FindManyLogsDto implements PaginationOptions {
-  @ApiPropertyOptional({ description: 'Page number for offset pagination', example: 1 })
+  /** Page number for offset pagination */
   page?: number;
 
-  @ApiPropertyOptional({ description: 'Number of items per page', example: 20 })
+  /** Number of items per page */
   limit?: number;
 
-  @ApiPropertyOptional({ description: 'Cursor ID for cursor pagination' })
+  /** Cursor ID for cursor pagination */
   cursor?: string;
 }
 

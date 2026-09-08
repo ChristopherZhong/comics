@@ -395,7 +395,7 @@ export class AppRoot extends LitElement {
   @state() newChapterNum = '';
   @state() newChapterPages = '';
 
-  override connectedCallback() {
+  override connectedCallback(): void {
     super.connectedCallback();
     if (this.token) {
       this.fetchProfile();
@@ -404,17 +404,17 @@ export class AppRoot extends LitElement {
     }
   }
 
-  get authHeader() {
+  get authHeader(): Record<string, string> {
     return this.token ? { Authorization: `Bearer ${this.token}` } : {};
   }
 
-  async fetchProfile() {
+  async fetchProfile(): Promise<void> {
     try {
-      const res = await fetch('/api/auth/profile', {
-        headers: this.authHeader as any,
+      const response = await fetch('/api/auth/profile', {
+        headers: this.authHeader,
       });
-      if (res.ok) {
-        this.user = await res.json() as any;
+      if (response.ok) {
+        this.user = (await response.json()) as { email: string; role: string; roles?: string[] };
         this.fetchComics();
         this.fetchProgress();
         this.fetchLogs();
@@ -426,74 +426,77 @@ export class AppRoot extends LitElement {
     }
   }
 
-  async fetchComics() {
+  async fetchComics(): Promise<void> {
     try {
-      const res = await fetch('/api/comics', {
-        headers: this.authHeader as any,
+      const response = await fetch('/api/comics', {
+        headers: this.authHeader,
       });
-      if (res.ok) {
-        const data = await res.json() as any;
-        this.comics = Array.isArray(data) ? data : data.items || [];
+      if (response.ok) {
+        const dataResponse = (await response.json()) as { items?: Comic[] } | Comic[];
+        this.comics = Array.isArray(dataResponse) ? dataResponse : dataResponse.items || [];
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  async fetchProgress() {
+  async fetchProgress(): Promise<void> {
     if (!this.token) return;
     try {
-      const res = await fetch('/api/progress', {
-        headers: this.authHeader as any,
+      const response = await fetch('/api/progress', {
+        headers: this.authHeader,
       });
-      if (res.ok) {
-        const list: { chapterId: string; status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED' }[] = await res.json() as any;
-        const map: Record<string, 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED'> = {};
-        for (const item of list) {
-          map[item.chapterId] = item.status;
+      if (response.ok) {
+        const progressList = (await response.json()) as {
+          chapterId: string;
+          status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED';
+        }[];
+        const progressMap: Record<string, 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED'> = {};
+        for (const item of progressList) {
+          progressMap[item.chapterId] = item.status;
         }
-        this.progress = map;
+        this.progress = progressMap;
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  async fetchLogs() {
+  async fetchLogs(): Promise<void> {
     if (!this.token) return;
     try {
       const isAdmin = this.user?.role === 'ADMIN' || this.user?.roles?.includes('ADMIN');
       const endpoint = isAdmin ? '/api/progress/logs/all' : '/api/progress/logs';
-      const res = await fetch(endpoint, {
-        headers: this.authHeader as any,
+      const response = await fetch(endpoint, {
+        headers: this.authHeader,
       });
-      if (res.ok) {
-        const data = await res.json() as any;
-        this.logs = Array.isArray(data) ? data : data.items || [];
+      if (response.ok) {
+        const dataResponse = (await response.json()) as { items?: Log[] } | Log[];
+        this.logs = Array.isArray(dataResponse) ? dataResponse : dataResponse.items || [];
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  async handleAuth(e: Event) {
-    e.preventDefault();
+  async handleAuth(event: Event): Promise<void> {
+    event.preventDefault();
     this.errorMsg = '';
     const endpoint = this.authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
     const payload = this.authMode === 'login'
       ? { email: this.email, password: this.password }
-      : { email: this.email, password: this.password, role: this.registerRole };
+      : { email: this.email, password: this.password, roles: [this.registerRole] };
 
     try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch(endpoint, {
         body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
       });
-      const data = await res.json() as any;
-      if (res.ok) {
-        if (this.authMode === 'login') {
-          this.token = data.access_token;
+      const dataResponse = (await response.json()) as { access_token?: string; message?: string };
+      if (response.ok) {
+        if (this.authMode === 'login' && dataResponse.access_token) {
+          this.token = dataResponse.access_token;
           localStorage.setItem('token', this.token);
           await this.fetchProfile();
         } else {
@@ -503,14 +506,14 @@ export class AppRoot extends LitElement {
         this.email = '';
         this.password = '';
       } else {
-        this.errorMsg = data.message || 'Authentication failed';
+        this.errorMsg = dataResponse.message || 'Authentication failed';
       }
     } catch {
       this.errorMsg = 'Server connection error';
     }
   }
 
-  logout() {
+  logout(): void {
     this.token = '';
     this.user = null;
     this.progress = {};
@@ -519,48 +522,51 @@ export class AppRoot extends LitElement {
     localStorage.removeItem('token');
   }
 
-  async handleStatusChange(chapterId: string, status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED') {
+  async handleStatusChange(
+    chapterId: string,
+    status: 'UNREAD' | 'IN_PROGRESS' | 'COMPLETED'
+  ): Promise<void> {
     if (!this.token) {
       window.alert('You must be logged in to update your progress.');
       return;
     }
     try {
-      const res = await fetch('/api/progress/update', {
-        method: 'POST',
+      const response = await fetch('/api/progress/update', {
+        body: JSON.stringify({ chapterId, status }),
         headers: {
           'Content-Type': 'application/json',
           ...this.authHeader,
         },
-        body: JSON.stringify({ chapterId, status }),
+        method: 'POST',
       });
-      if (res.ok) {
+      if (response.ok) {
         this.progress = { ...this.progress, [chapterId]: status };
         this.fetchLogs();
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  async handleCreateComic(e: Event) {
-    e.preventDefault();
+  async handleCreateComic(event: Event): Promise<void> {
+    event.preventDefault();
     try {
-      const res = await fetch('/api/comics', {
-        method: 'POST',
+      const response = await fetch('/api/comics', {
+        body: JSON.stringify({
+          artist: this.newComicArtist || undefined,
+          coverUrl: this.newComicCoverUrl || undefined,
+          description: this.newComicDesc || undefined,
+          publisher: this.newComicPublisher || undefined,
+          title: this.newComicTitle,
+          writer: this.newComicWriter || undefined,
+        }),
         headers: {
           'Content-Type': 'application/json',
           ...this.authHeader,
         },
-        body: JSON.stringify({
-          title: this.newComicTitle,
-          description: this.newComicDesc || undefined,
-          publisher: this.newComicPublisher || undefined,
-          coverUrl: this.newComicCoverUrl || undefined,
-          writer: this.newComicWriter || undefined,
-          artist: this.newComicArtist || undefined,
-        }),
+        method: 'POST',
       });
-      if (res.ok) {
+      if (response.ok) {
         await this.fetchComics();
         this.newComicTitle = '';
         this.newComicDesc = '';
@@ -570,38 +576,37 @@ export class AppRoot extends LitElement {
         this.newComicArtist = '';
         window.alert('Comic created successfully!');
       } else {
-        const d = await res.json() as any;
-        window.alert(d.message || 'Failed to create comic');
+        const errorData = (await response.json()) as { message?: string };
+        window.alert(errorData.message || 'Failed to create comic');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  async handleAddChapter(e: Event) {
-    e.preventDefault();
+  async handleAddChapter(event: Event): Promise<void> {
+    event.preventDefault();
     if (!this.activeComic) return;
     try {
-      const res = await fetch('/api/chapters', {
-        method: 'POST',
+      const response = await fetch('/api/chapters', {
+        body: JSON.stringify({
+          chapterNumber: parseFloat(this.newChapterNum),
+          comicId: this.activeComic.id,
+          pagesCount: parseInt(this.newChapterPages, 10),
+          title: this.newChapterTitle,
+        }),
         headers: {
           'Content-Type': 'application/json',
           ...this.authHeader,
         },
-        body: JSON.stringify({
-          comicId: this.activeComic.id,
-          title: this.newChapterTitle,
-          chapterNumber: parseFloat(this.newChapterNum),
-          pagesCount: parseInt(this.newChapterPages, 10),
-        }),
+        method: 'POST',
       });
-      if (res.ok) {
-        // Refresh active comic to include the new chapter
-        const updated = await fetch(`/api/comics/${this.activeComic.id}`, {
-          headers: this.authHeader as any,
+      if (response.ok) {
+        const updatedResponse = await fetch(`/api/comics/${this.activeComic.id}`, {
+          headers: this.authHeader,
         });
-        if (updated.ok) {
-          this.activeComic = await updated.json() as any;
+        if (updatedResponse.ok) {
+          this.activeComic = (await updatedResponse.json()) as Comic;
         }
         await this.fetchComics();
         this.newChapterTitle = '';
@@ -609,30 +614,30 @@ export class AppRoot extends LitElement {
         this.newChapterPages = '';
         window.alert('Chapter added successfully!');
       } else {
-        const d = await res.json() as any;
-        window.alert(d.message || 'Failed to add chapter');
+        const errorData = (await response.json()) as { message?: string };
+        window.alert(errorData.message || 'Failed to add chapter');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   }
 
-  async handleDeleteComic(id: string) {
+  async handleDeleteComic(comicId: string): Promise<void> {
     if (!window.confirm('Are you sure you want to delete this comic and all of its chapters?')) return;
     try {
-      const res = await fetch(`/api/comics/${id}`, {
+      const response = await fetch(`/api/comics/${comicId}`, {
+        headers: this.authHeader,
         method: 'DELETE',
-        headers: this.authHeader as any,
       });
-      if (res.ok) {
-        if (this.activeComic?.id === id) {
+      if (response.ok) {
+        if (this.activeComic?.id === comicId) {
           this.activeComic = null;
         }
         await this.fetchComics();
         window.alert('Comic deleted successfully!');
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -644,16 +649,16 @@ export class AppRoot extends LitElement {
         <form @submit=${this.handleAuth}>
           <div class="form-group">
             <label>Email Address</label>
-            <input type="email" required .value=${this.email} @input=${(e: any) => this.email = e.target.value}>
+            <input type="email" required .value=${this.email} @input=${(event: Event) => this.email = (event.target as HTMLInputElement).value}>
           </div>
           <div class="form-group">
             <label>Password</label>
-            <input type="password" required .value=${this.password} @input=${(e: any) => this.password = e.target.value}>
+            <input type="password" required .value=${this.password} @input=${(event: Event) => this.password = (event.target as HTMLInputElement).value}>
           </div>
           ${this.authMode === 'register' ? html`
             <div class="form-group">
               <label>Role</label>
-              <select .value=${this.registerRole} @change=${(e: any) => this.registerRole = e.target.value}>
+              <select .value=${this.registerRole} @change=${(event: Event) => this.registerRole = (event.target as HTMLSelectElement).value}>
                 <option value="USER">Standard User</option>
                 <option value="ADMIN">Administrator</option>
               </select>
@@ -704,17 +709,17 @@ export class AppRoot extends LitElement {
             <div class="chapter-list">
               ${this.activeComic.chapters.length === 0 ? html`
                 <p style="color: #64748b; font-style: italic;">No chapters added yet.</p>
-              ` : this.activeComic.chapters.map(ch => {
-                const currentStatus = this.progress[ch.id] || 'UNREAD';
+              ` : this.activeComic.chapters.map(chapterItem => {
+                const currentStatus = this.progress[chapterItem.id] || 'UNREAD';
                 return html`
                   <div class="chapter-row">
                     <div class="chapter-info">
-                      <span class="chapter-name">Ch. ${ch.chapterNumber}: ${ch.title}</span>
-                      <span class="chapter-pages">${ch.pagesCount} pages</span>
+                      <span class="chapter-name">Ch. ${chapterItem.chapterNumber}: ${chapterItem.title}</span>
+                      <span class="chapter-pages">${chapterItem.pagesCount} pages</span>
                     </div>
                     <div>
                       ${isProgressOwner ? html`
-                        <select class="status-select" .value=${currentStatus} @change=${(e: any) => this.handleStatusChange(ch.id, e.target.value)}>
+                        <select class="status-select" .value=${currentStatus} @change=${(event: Event) => this.handleStatusChange(chapterItem.id, (event.target as HTMLSelectElement).value as any)}>
                           <option value="UNREAD">Unread</option>
                           <option value="IN_PROGRESS">In Progress</option>
                           <option value="COMPLETED">Completed</option>
@@ -735,16 +740,16 @@ export class AppRoot extends LitElement {
               <form @submit=${this.handleAddChapter}>
                 <div class="form-group">
                   <label>Chapter Title</label>
-                  <input type="text" required .value=${this.newChapterTitle} @input=${(e: any) => this.newChapterTitle = e.target.value}>
+                  <input type="text" required .value=${this.newChapterTitle} @input=${(event: Event) => this.newChapterTitle = (event.target as HTMLInputElement).value}>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                   <div class="form-group" style="margin-bottom: 0;">
                     <label>Chapter Number</label>
-                    <input type="number" step="0.1" required .value=${this.newChapterNum} @input=${(e: any) => this.newChapterNum = e.target.value}>
+                    <input type="number" step="0.1" required .value=${this.newChapterNum} @input=${(event: Event) => this.newChapterNum = (event.target as HTMLInputElement).value}>
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
                     <label>Pages Count</label>
-                    <input type="number" required .value=${this.newChapterPages} @input=${(e: any) => this.newChapterPages = e.target.value}>
+                    <input type="number" required .value=${this.newChapterPages} @input=${(event: Event) => this.newChapterPages = (event.target as HTMLInputElement).value}>
                   </div>
                 </div>
                 <button type="submit">Add Chapter</button>
@@ -761,19 +766,19 @@ export class AppRoot extends LitElement {
       <div>
         <h2 style="color: #1e293b; margin-bottom: 1.5rem;">All Comics</h2>
         <div class="comic-list">
-          ${this.comics.map(c => html`
+          ${this.comics.map(comicItem => html`
             <div class="comic-card">
-              <img class="comic-cover" src=${c.coverUrl || 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500&auto=format&fit=crop'} alt=${c.title}>
+              <img class="comic-cover" src=${comicItem.coverUrl || 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500&auto=format&fit=crop'} alt=${comicItem.title}>
               <div class="comic-info">
                 <div>
-                  <h4 class="comic-title">${c.title}</h4>
-                  <p class="comic-meta">By ${c.writer || 'Unknown'}</p>
-                  <p class="comic-meta" style="font-style: italic;">${c.chapters?.length || 0} Chapters</p>
+                  <h4 class="comic-title">${comicItem.title}</h4>
+                  <p class="comic-meta">By ${comicItem.writer || 'Unknown'}</p>
+                  <p class="comic-meta" style="font-style: italic;">${comicItem.chapters?.length || 0} Chapters</p>
                 </div>
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                  <button @click=${() => this.activeComic = c}>View Details</button>
+                  <button @click=${() => this.activeComic = comicItem}>View Details</button>
                   ${isAdmin ? html`
-                    <button class="danger" @click=${() => this.handleDeleteComic(c.id)}>Delete</button>
+                    <button class="danger" @click=${() => this.handleDeleteComic(comicItem.id)}>Delete</button>
                   ` : ''}
                 </div>
               </div>
@@ -819,28 +824,28 @@ export class AppRoot extends LitElement {
         <form @submit=${this.handleCreateComic} style="margin-top: 1.5rem;">
           <div class="form-group">
             <label>Title</label>
-            <input type="text" required .value=${this.newComicTitle} @input=${(e: any) => this.newComicTitle = e.target.value}>
+            <input type="text" required .value=${this.newComicTitle} @input=${(event: Event) => this.newComicTitle = (event.target as HTMLInputElement).value}>
           </div>
           <div class="form-group">
             <label>Description</label>
-            <textarea rows="3" .value=${this.newComicDesc} @input=${(e: any) => this.newComicDesc = e.target.value}></textarea>
+            <textarea rows="3" .value=${this.newComicDesc} @input=${(event: Event) => this.newComicDesc = (event.target as HTMLInputElement).value}></textarea>
           </div>
           <div class="form-group">
             <label>Publisher</label>
-            <input type="text" .value=${this.newComicPublisher} @input=${(e: any) => this.newComicPublisher = e.target.value}>
+            <input type="text" .value=${this.newComicPublisher} @input=${(event: Event) => this.newComicPublisher = (event.target as HTMLInputElement).value}>
           </div>
           <div class="form-group">
             <label>Cover Image URL</label>
-            <input type="url" .value=${this.newComicCoverUrl} @input=${(e: any) => this.newComicCoverUrl = e.target.value}>
+            <input type="url" .value=${this.newComicCoverUrl} @input=${(event: Event) => this.newComicCoverUrl = (event.target as HTMLInputElement).value}>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
               <label>Writer</label>
-              <input type="text" .value=${this.newComicWriter} @input=${(e: any) => this.newComicWriter = e.target.value}>
+              <input type="text" .value=${this.newComicWriter} @input=${(event: Event) => this.newComicWriter = (event.target as HTMLInputElement).value}>
             </div>
             <div class="form-group">
               <label>Artist</label>
-              <input type="text" .value=${this.newComicArtist} @input=${(e: any) => this.newComicArtist = e.target.value}>
+              <input type="text" .value=${this.newComicArtist} @input=${(event: Event) => this.newComicArtist = (event.target as HTMLInputElement).value}>
             </div>
           </div>
           <button type="submit" style="margin-top: 1rem;">Create Comic Series</button>

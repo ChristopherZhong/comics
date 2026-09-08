@@ -7,41 +7,45 @@ import {
   OffsetPaginationStrategy,
   PaginationResult,
 } from '../common/pagination/pagination.strategy';
+import { ReadingProgress } from './entities/reading-progress.entity';
 import { ReadingEventLog } from './entities/reading-event-log.entity';
 
 @Injectable()
 export class ProgressService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserProgress(userId: string) {
+  async getUserProgress(userId: string): Promise<ReadingProgress[]> {
     return this.prisma.readingProgress.findMany({
-      where: { userId },
       include: {
         chapter: {
           include: { comic: true },
         },
       },
+      where: { userId },
     });
   }
 
-  async updateProgress(userId: string, dto: UpdateProgressDto) {
+  async updateProgress(
+    userId: string,
+    dto: UpdateProgressDto
+  ): Promise<ReadingProgress> {
     const { chapterId, status } = dto;
 
     // 1. Upsert reading progress status
     const progress = await this.prisma.readingProgress.upsert({
-      where: {
-        userId_chapterId: { userId, chapterId },
-      },
+      create: { chapterId, status, userId },
       update: { status },
-      create: { userId, chapterId, status },
+      where: {
+        userId_chapterId: { chapterId, userId },
+      },
     });
 
     // 2. Create audit event log
     await this.prisma.readingEventLog.create({
       data: {
-        userId,
         chapterId,
         status,
+        userId,
       },
     });
 
@@ -54,10 +58,10 @@ export class ProgressService {
     const pagination = options.pagination || {};
     const where = options.userId ? { userId: options.userId } : undefined;
     const queryInclude = {
-      user: { select: { email: true } },
       chapter: {
         include: { comic: true },
       },
+      user: { select: { email: true } },
     };
     const orderBy = { timestamp: 'desc' };
 
