@@ -19,7 +19,9 @@ export class ComicService {
     return this.prisma.comic.create({
       data: prismaData,
       include: {
-        scanlationGroups: true,
+        scanlationGroups: {
+          include: { scanlationGroup: true },
+        },
       },
     });
   }
@@ -30,7 +32,9 @@ export class ComicService {
       chapters: {
         orderBy: { chapterNumber: 'asc' },
       },
-      scanlationGroups: true,
+      scanlationGroups: {
+        include: { scanlationGroup: true },
+      },
     };
 
     if (pagination.cursor) {
@@ -48,7 +52,9 @@ export class ComicService {
         chapters: {
           orderBy: { chapterNumber: 'asc' },
         },
-        scanlationGroups: true,
+        scanlationGroups: {
+          include: { scanlationGroup: true },
+        },
       },
       where: { id },
     });
@@ -60,11 +66,18 @@ export class ComicService {
       data: {
         ...comicData,
         scanlationGroups: scanlationGroupIds
-          ? { set: scanlationGroupIds.map((groupId) => ({ id: groupId })) }
+          ? {
+              deleteMany: {},
+              create: scanlationGroupIds.map((groupId) => ({
+                scanlationGroupId: groupId,
+              })),
+            }
           : undefined,
       },
       include: {
-        scanlationGroups: true,
+        scanlationGroups: {
+          include: { scanlationGroup: true },
+        },
       },
       where: { id },
     });

@@ -6,7 +6,11 @@ export function transformCreateChapter(dto: CreateChapterDto) {
     ...chapterData,
     pagesCount: chapterData.pagesCount ?? 0,
     scanlationGroups: scanlationGroupIds
-      ? { connect: scanlationGroupIds.map((groupId) => ({ id: groupId })) }
+      ? {
+          create: scanlationGroupIds.map((groupId) => ({
+            scanlationGroupId: groupId,
+          })),
+        }
       : undefined,
   };
 }

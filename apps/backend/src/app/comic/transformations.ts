@@ -6,7 +6,11 @@ export function transformCreateComic(dto: CreateComic) {
   return {
     ...comicData,
     scanlationGroups: scanlationGroupIds
-      ? { connect: scanlationGroupIds.map((id) => ({ id })) }
+      ? {
+          create: scanlationGroupIds.map((groupId) => ({
+            scanlationGroupId: groupId,
+          })),
+        }
       : undefined,
   };
 }

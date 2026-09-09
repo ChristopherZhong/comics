@@ -20,7 +20,9 @@ export class ChapterService {
     return this.prisma.chapter.create({
       data: prismaData,
       include: {
-        scanlationGroups: true,
+        scanlationGroups: {
+          include: { scanlationGroup: true },
+        },
       },
     });
   }
@@ -31,7 +33,9 @@ export class ChapterService {
     const pagination = options.pagination || {};
     const where = options.comicId ? { comicId: options.comicId } : undefined;
     const queryInclude = {
-      scanlationGroups: true,
+      scanlationGroups: {
+        include: { scanlationGroup: true },
+      },
     };
     const orderBy = { chapterNumber: 'asc' };
 
@@ -62,7 +66,9 @@ export class ChapterService {
     return this.prisma.chapter.findUnique({
       include: {
         comic: true,
-        scanlationGroups: true,
+        scanlationGroups: {
+          include: { scanlationGroup: true },
+        },
       },
       where: { id },
     });
@@ -74,11 +80,18 @@ export class ChapterService {
       data: {
         ...chapterData,
         scanlationGroups: scanlationGroupIds
-          ? { set: scanlationGroupIds.map((groupId) => ({ id: groupId })) }
+          ? {
+              deleteMany: {},
+              create: scanlationGroupIds.map((groupId) => ({
+                scanlationGroupId: groupId,
+              })),
+            }
           : undefined,
       },
       include: {
-        scanlationGroups: true,
+        scanlationGroups: {
+          include: { scanlationGroup: true },
+        },
       },
       where: { id },
     });

@@ -17,6 +17,8 @@ async function main() {
   // Clear existing data
   await prisma.readingEventLog.deleteMany({});
   await prisma.readingProgress.deleteMany({});
+  await prisma.chapterScanlationGroup.deleteMany({});
+  await prisma.comicScanlationGroup.deleteMany({});
   await prisma.chapter.deleteMany({});
   await prisma.comic.deleteMany({});
   await prisma.scanlationGroup.deleteMany({});
@@ -80,23 +82,30 @@ async function main() {
   // 4. Comics & Chapters
   const comic1 = await prisma.comic.create({
     data: {
-      title: 'The Amazing Spiderman',
-      description: 'The spectacular adventures of Peter Parker, web-slinging hero.',
-      publisher: 'Marvel Comics',
-      coverUrl: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500&auto=format&fit=crop',
-      writer: 'Stan Lee',
       artist: 'Steve Ditko',
+      coverUrl: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?w=500&auto=format&fit=crop',
+      description: 'The spectacular adventures of Peter Parker, web-slinging hero.',
       language: 'English',
-      status: 'ONGOING',
-      type: 'COMIC',
+      publisher: 'Marvel Comics',
       scanlationGroups: {
-        connect: [{ id: group1.id }],
+        create: [{ scanlationGroupId: group1.id, url: 'https://asuracomic.net/series/spiderman' }],
       },
+      status: 'ONGOING',
+      title: 'The Amazing Spiderman',
+      type: 'COMIC',
+      writer: 'Stan Lee',
       chapters: {
         create: [
-          { title: 'Spider-Man!', chapterNumber: 1, pagesCount: 24 },
-          { title: 'The Duel to the Death with the Vulture!', chapterNumber: 2, pagesCount: 22 },
-          { title: 'Spider-Man Versus Doctor Octopus', chapterNumber: 3, pagesCount: 25 },
+          {
+            chapterNumber: 1,
+            pagesCount: 24,
+            title: 'Spider-Man!',
+            scanlationGroups: {
+              create: [{ scanlationGroupId: group1.id, url: 'https://asuracomic.net/spiderman-ch-1' }],
+            },
+          },
+          { chapterNumber: 2, pagesCount: 22, title: 'The Duel to the Death with the Vulture!' },
+          { chapterNumber: 3, pagesCount: 25, title: 'Spider-Man Versus Doctor Octopus' },
         ],
       },
     },
@@ -104,22 +113,25 @@ async function main() {
 
   const comic2 = await prisma.comic.create({
     data: {
-      title: 'Solo Leveling',
-      description: 'In a world where hunters must battle deadly monsters, weak hunter Sung Jinwoo is chosen by a mysterious system.',
-      publisher: 'D&C Media',
-      coverUrl: 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=500&auto=format&fit=crop',
-      writer: 'Chugong',
       artist: 'DUBU',
+      coverUrl: 'https://images.unsplash.com/photo-1531259683007-016a7b628fc3?w=500&auto=format&fit=crop',
+      description: 'In a world where hunters must battle deadly monsters, weak hunter Sung Jinwoo is chosen by a mysterious system.',
       language: 'Korean',
-      status: 'COMPLETED',
-      type: 'MANHWA',
+      publisher: 'D&C Media',
       scanlationGroups: {
-        connect: [{ id: group1.id }, { id: group2.id }],
+        create: [
+          { scanlationGroupId: group1.id, url: 'https://asuracomic.net/series/solo-leveling' },
+          { scanlationGroupId: group2.id, url: 'https://flamescans.org/series/solo-leveling' },
+        ],
       },
+      status: 'COMPLETED',
+      title: 'Solo Leveling',
+      type: 'MANHWA',
+      writer: 'Chugong',
       chapters: {
         create: [
-          { title: 'Chapter 1: The E-Rank Hunter', chapterNumber: 1, pagesCount: 28 },
-          { title: 'Chapter 2: Double Dungeon', chapterNumber: 2, pagesCount: 26 },
+          { chapterNumber: 1, pagesCount: 28, title: 'Chapter 1: The E-Rank Hunter' },
+          { chapterNumber: 2, pagesCount: 26, title: 'Chapter 2: Double Dungeon' },
         ],
       },
     },
