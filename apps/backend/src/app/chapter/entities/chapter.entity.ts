@@ -26,6 +26,6 @@ export class Chapter {
   /** Total number of pages in the chapter */
   pagesCount: number;
 
-  /** ID of the scanlation group that translated this chapter */
-  scanlationGroupId?: string | null;
+  /** List of scanlation group IDs translating this chapter */
+  scanlationGroupIds?: string[];
 }

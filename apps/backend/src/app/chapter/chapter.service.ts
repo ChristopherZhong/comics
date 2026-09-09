@@ -19,6 +19,9 @@ export class ChapterService {
     const prismaData = transformCreateChapter(data);
     return this.prisma.chapter.create({
       data: prismaData,
+      include: {
+        scanlationGroups: true,
+      },
     });
   }
 
@@ -27,6 +30,9 @@ export class ChapterService {
   ): Promise<PaginationResult<Chapter>> {
     const pagination = options.pagination || {};
     const where = options.comicId ? { comicId: options.comicId } : undefined;
+    const queryInclude = {
+      scanlationGroups: true,
+    };
     const orderBy = { chapterNumber: 'asc' };
 
     if (pagination.cursor) {
@@ -35,7 +41,7 @@ export class ChapterService {
         this.prisma,
         'chapter',
         pagination,
-        undefined,
+        queryInclude,
         where,
         orderBy
       );
@@ -45,7 +51,7 @@ export class ChapterService {
         this.prisma,
         'chapter',
         pagination,
-        undefined,
+        queryInclude,
         where,
         orderBy
       );
@@ -54,14 +60,26 @@ export class ChapterService {
 
   async findOne(id: string): Promise<Chapter | null> {
     return this.prisma.chapter.findUnique({
-      include: { comic: true },
+      include: {
+        comic: true,
+        scanlationGroups: true,
+      },
       where: { id },
     });
   }
 
   async update(id: string, data: UpdateChapterDto): Promise<Chapter> {
+    const { scanlationGroupIds, ...chapterData } = data;
     return this.prisma.chapter.update({
-      data,
+      data: {
+        ...chapterData,
+        scanlationGroups: scanlationGroupIds
+          ? { set: scanlationGroupIds.map((groupId) => ({ id: groupId })) }
+          : undefined,
+      },
+      include: {
+        scanlationGroups: true,
+      },
       where: { id },
     });
   }

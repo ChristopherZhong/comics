@@ -1,11 +1,12 @@
 import { CreateChapterDto } from './dto/create-chapter.dto';
 
 export function transformCreateChapter(dto: CreateChapterDto) {
+  const { scanlationGroupIds, ...chapterData } = dto;
   return {
-    chapterNumber: dto.chapterNumber,
-    comicId: dto.comicId,
-    pagesCount: dto.pagesCount ?? 0,
-    scanlationGroupId: dto.scanlationGroupId || null,
-    title: dto.title,
+    ...chapterData,
+    pagesCount: chapterData.pagesCount ?? 0,
+    scanlationGroups: scanlationGroupIds
+      ? { connect: scanlationGroupIds.map((groupId) => ({ id: groupId })) }
+      : undefined,
   };
 }

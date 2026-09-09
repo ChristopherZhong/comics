@@ -6,5 +6,7 @@ export class CreateChapterDto extends PickType(Chapter, [
   'title',
   'chapterNumber',
   'pagesCount',
-  'scanlationGroupId',
-] as const) {}
+] as const) {
+  /** List of scanlation group IDs translating this chapter */
+  scanlationGroupIds?: string[];
+}
