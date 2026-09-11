@@ -1,5 +1,5 @@
 import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -19,7 +19,6 @@ export class AuthController {
 
   /** Register a new user */
   @Post('register')
-  @ApiResponse({ description: 'User successfully created', status: 201 })
   async register(
     @Body() body: RegisterDto
   ): Promise<Omit<UserEntity, 'roles'> & { roles: Array<{ name: string }> }> {
@@ -29,9 +28,10 @@ export class AuthController {
   /** Log in with credentials */
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  @ApiBody({ type: LoginDto })
-  @ApiResponse({ status: 200, type: AuthResponseDto })
-  async login(@Request() request: AuthenticatedRequest): Promise<AuthResponseDto> {
+  async login(
+    @Body() _body: LoginDto,
+    @Request() request: AuthenticatedRequest
+  ): Promise<AuthResponseDto> {
     return this.authService.login(request.user);
   }
 
@@ -39,7 +39,6 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  @ApiResponse({ status: 200, type: UserEntity })
   getProfile(@Request() request: AuthenticatedRequest): UserEntity {
     return request.user;
   }

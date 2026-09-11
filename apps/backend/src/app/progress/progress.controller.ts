@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, UseGuards, Request, Query } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProgressService } from './progress.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
 import { FindManyLogsDto } from './dto/find-many-logs.dto';
@@ -23,7 +23,6 @@ export class ProgressController {
 
   /** Get current user reading progress */
   @Get()
-  @ApiResponse({ status: 200, type: [ReadingProgress] })
   async getMyProgress(
     @Request() request: AuthenticatedUserRequest
   ): Promise<ReadingProgress[]> {
@@ -32,7 +31,6 @@ export class ProgressController {
 
   /** Update reading progress for a chapter */
   @Post('update')
-  @ApiResponse({ status: 200, type: ReadingProgress })
   async updateProgress(
     @Request() request: AuthenticatedUserRequest,
     @Body() dto: UpdateProgressDto

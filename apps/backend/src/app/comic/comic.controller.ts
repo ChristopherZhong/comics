@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ComicService } from './comic.service';
 import { CreateComic } from './dto/create-comic.dto';
 import { FindManyComicsDto } from './dto/find-many-options.dto';
@@ -30,7 +30,6 @@ export class ComicController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Post()
-  @ApiResponse({ status: 201, type: Comic })
   async create(@Body() body: CreateComic): Promise<Comic> {
     return this.comicService.create(body);
   }
@@ -51,7 +50,6 @@ export class ComicController {
 
   /** Find comic series by ID */
   @Get(':id')
-  @ApiResponse({ status: 200, type: Comic })
   async findOne(@Param('id') id: string): Promise<Comic | null> {
     return this.comicService.findOne(id);
   }

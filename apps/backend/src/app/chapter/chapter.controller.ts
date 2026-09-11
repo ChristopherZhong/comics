@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ChapterService } from './chapter.service';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
@@ -31,7 +31,6 @@ export class ChapterController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Post()
-  @ApiResponse({ status: 201, type: Chapter })
   async create(@Body() body: CreateChapterDto): Promise<Chapter> {
     return this.chapterService.create(body);
   }
@@ -53,7 +52,6 @@ export class ChapterController {
 
   /** Find chapter by ID */
   @Get(':id')
-  @ApiResponse({ status: 200, type: Chapter })
   async findOne(@Param('id') id: string): Promise<Chapter | null> {
     return this.chapterService.findOne(id);
   }
@@ -62,7 +60,6 @@ export class ChapterController {
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Patch(':id')
-  @ApiResponse({ status: 200, type: Chapter })
   async update(
     @Param('id') id: string,
     @Body() body: UpdateChapterDto
