@@ -13,6 +13,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ComicService } from './comic.service';
 import { CreateComic } from './dto/create-comic.dto';
 import { FindManyComicsDto } from './dto/find-many-options.dto';
+import { FindByIdDto } from '../common/dto/find-by-id.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -61,18 +62,18 @@ export class ComicController {
   /**
    * Find comic series by ID.
    *
-   * @param id Unique identifier of the comic.
+   * @param params Parameter DTO containing unique identifier of the comic.
    * @returns The comic entity or null if not found.
    */
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Comic | null> {
-    return this.comicService.findOne(id);
+  async findOne(@Param() params: FindByIdDto): Promise<Comic | null> {
+    return this.comicService.findOne(params.id);
   }
 
   /**
    * Update an existing comic series.
    *
-   * @param id Unique identifier of the comic.
+   * @param params Parameter DTO containing unique identifier of the comic.
    * @param body Partial comic data to update.
    * @returns Updated comic entity.
    */
@@ -80,22 +81,22 @@ export class ComicController {
   @Roles('ADMIN')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param() params: FindByIdDto,
     @Body() body: Partial<CreateComic>
   ): Promise<Comic> {
-    return this.comicService.update(id, body);
+    return this.comicService.update(params.id, body);
   }
 
   /**
    * Delete a comic series.
    *
-   * @param id Unique identifier of the comic.
+   * @param params Parameter DTO containing unique identifier of the comic.
    * @returns Deleted comic entity.
    */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<Comic> {
-    return this.comicService.remove(id);
+  async remove(@Param() params: FindByIdDto): Promise<Comic> {
+    return this.comicService.remove(params.id);
   }
 }

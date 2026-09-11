@@ -4,13 +4,6 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserEntity } from './entities/user.entity';
 
-interface UserWithRoles {
-  id: string;
-  email: string;
-  password?: string;
-  roles: Array<{ name: string }>;
-}
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -23,47 +16,42 @@ export class AuthService {
    *
    * @param email Email address of the user.
    * @param pass Plaintext password to verify.
-   * @returns User object without password if valid, or null if invalid.
+   * @returns Validated UserEntity without password if credentials match, or null.
    */
   async validateUser(
     email: string,
     pass: string
-  ): Promise<Omit<UserWithRoles, 'password'> | null> {
+  ): Promise<UserEntity | null> {
     const user = await this.prisma.user.findUnique({
-      where: { email },
       include: { roles: true },
+      where: { email },
     });
     if (user && (await bcrypt.compare(pass, user.password))) {
       return {
-        id: user.id,
         email: user.email,
-        roles: user.roles,
+        id: user.id,
+        roles: user.roles.map((role) => role.name),
       };
     }
     return null;
   }
 
   /**
-   * Generate JWT access token for an authenticated user.
+   * Generate JWT access token for an authenticated user entity.
    *
-   * @param user Authenticated user record with roles.
+   * @param user Authenticated UserEntity record.
    * @returns Access token object and user entity.
    */
-  async login(user: UserWithRoles): Promise<{ access_token: string; user: UserEntity }> {
-    const rolesList = user.roles.map((roleObject) => roleObject.name);
+  async login(user: UserEntity): Promise<{ access_token: string; user: UserEntity }> {
     const payload = {
       email: user.email,
-      roles: rolesList,
+      roles: user.roles,
       sub: user.id,
     };
 
     return {
       access_token: this.jwtService.sign(payload),
-      user: {
-        email: user.email,
-        id: user.id,
-        roles: rolesList,
-      },
+      user,
     };
   }
 
@@ -73,13 +61,13 @@ export class AuthService {
    * @param email User email address.
    * @param pass Plaintext password.
    * @param rolesList List of role names to assign.
-   * @returns Newly created user record without password.
+   * @returns Newly created UserEntity.
    */
   async register(
     email: string,
     pass: string,
     rolesList: string[] = ['USER']
-  ): Promise<Omit<UserWithRoles, 'password'>> {
+  ): Promise<UserEntity> {
     const existing = await this.prisma.user.findUnique({ where: { email } });
     if (existing) {
       throw new UnauthorizedException('Email already registered');
@@ -108,9 +96,9 @@ export class AuthService {
     });
 
     return {
-      id: user.id,
       email: user.email,
-      roles: user.roles,
+      id: user.id,
+      roles: user.roles.map((role) => role.name),
     };
   }
 }

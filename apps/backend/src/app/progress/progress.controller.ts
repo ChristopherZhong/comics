@@ -1,18 +1,14 @@
-import { Controller, Get, Post, Body, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProgressService } from './progress.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
 import { FindManyLogsDto } from './dto/find-many-logs.dto';
 import { ReadingProgress } from './entities/reading-progress.entity';
 import { ReadingEventLog } from './entities/reading-event-log.entity';
+import { UserEntity } from '../auth/entities/user.entity';
+import { User } from '../auth/user.decorator';
 import { PaginationResult } from '../common/pagination/pagination.strategy';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-
-interface AuthenticatedUserRequest {
-  user: {
-    id: string;
-  };
-}
 
 @ApiTags('progress')
 @ApiBearerAuth()
@@ -24,41 +20,41 @@ export class ProgressController {
   /**
    * Get reading progress records for the current user.
    *
-   * @param request Authenticated request containing user context.
+   * @param user Authenticated UserEntity extracted via decorator.
    * @returns Array of reading progress objects for the user.
    */
   @Get()
   async getMyProgress(
-    @Request() request: AuthenticatedUserRequest
+    @User() user: UserEntity
   ): Promise<ReadingProgress[]> {
-    return this.progressService.getUserProgress(request.user.id);
+    return this.progressService.getUserProgress(user.id);
   }
 
   /**
    * Update or create reading progress for a chapter.
    *
-   * @param request Authenticated request containing user context.
+   * @param user Authenticated UserEntity extracted via decorator.
    * @param dto Payload containing chapter ID and status.
    * @returns Updated reading progress entity.
    */
   @Post('update')
   async updateProgress(
-    @Request() request: AuthenticatedUserRequest,
+    @User() user: UserEntity,
     @Body() dto: UpdateProgressDto
   ): Promise<ReadingProgress> {
-    return this.progressService.updateProgress(request.user.id, dto);
+    return this.progressService.updateProgress(user.id, dto);
   }
 
   /**
    * Get reading activity logs for the current user.
    *
-   * @param request Authenticated request containing user context.
+   * @param user Authenticated UserEntity extracted via decorator.
    * @param query Query options for pagination parameters.
    * @returns Paginated result of reading event logs.
    */
   @Get('logs')
   async getMyLogs(
-    @Request() request: AuthenticatedUserRequest,
+    @User() user: UserEntity,
     @Query() query: FindManyLogsDto
   ): Promise<PaginationResult<ReadingEventLog>> {
     return this.progressService.getEventLogs({
@@ -67,7 +63,7 @@ export class ProgressController {
         limit: query.limit,
         page: query.page,
       },
-      userId: request.user.id,
+      userId: user.id,
     });
   }
 

@@ -15,6 +15,7 @@ import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { FindManyChaptersDto } from './dto/find-many-options.dto';
 import { Chapter } from './entities/chapter.entity';
+import { FindByIdDto } from '../common/dto/find-by-id.dto';
 import { PaginationResult } from '../common/pagination/pagination.strategy';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -63,18 +64,18 @@ export class ChapterController {
   /**
    * Find a chapter by ID.
    *
-   * @param id Unique identifier of the chapter.
+   * @param params Parameter DTO containing unique identifier of the chapter.
    * @returns Chapter entity or null if not found.
    */
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Chapter | null> {
-    return this.chapterService.findOne(id);
+  async findOne(@Param() params: FindByIdDto): Promise<Chapter | null> {
+    return this.chapterService.findOne(params.id);
   }
 
   /**
    * Update an existing chapter.
    *
-   * @param id Unique identifier of the chapter to update.
+   * @param params Parameter DTO containing unique identifier of the chapter to update.
    * @param body Update chapter payload.
    * @returns Updated chapter entity.
    */
@@ -82,22 +83,22 @@ export class ChapterController {
   @Roles('ADMIN')
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param() params: FindByIdDto,
     @Body() body: UpdateChapterDto
   ): Promise<Chapter> {
-    return this.chapterService.update(id, body);
+    return this.chapterService.update(params.id, body);
   }
 
   /**
    * Delete a chapter by ID.
    *
-   * @param id Unique identifier of the chapter to remove.
+   * @param params Parameter DTO containing unique identifier of the chapter to remove.
    * @returns Deleted chapter entity.
    */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<Chapter> {
-    return this.chapterService.remove(id);
+  async remove(@Param() params: FindByIdDto): Promise<Chapter> {
+    return this.chapterService.remove(params.id);
   }
 }
