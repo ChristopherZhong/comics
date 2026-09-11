@@ -5,7 +5,6 @@ import { FindManyLogsOptions } from './dto/find-many-logs.dto';
 import {
   PaginationResult,
   PaginationStrategyRegistry,
-  PaginationType,
 } from '../common/pagination/pagination.strategy';
 import { ReadingProgress } from './entities/reading-progress.entity';
 import { ReadingEventLog } from './entities/reading-event-log.entity';
@@ -68,8 +67,7 @@ export class ProgressService {
     };
     const orderBy = { timestamp: 'desc' };
 
-    const strategyType: PaginationType = pagination.cursor ? 'cursor' : 'offset';
-    const strategy = this.paginationRegistry.getStrategy<ReadingEventLog>(strategyType);
+    const strategy = this.paginationRegistry.getStrategy<ReadingEventLog>(pagination);
     return strategy.paginate(
       this.prisma,
       'readingEventLog',

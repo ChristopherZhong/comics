@@ -6,7 +6,6 @@ import { FindManyOptions } from './dto/find-many-options.dto';
 import {
   PaginationResult,
   PaginationStrategyRegistry,
-  PaginationType,
 } from '../common/pagination/pagination.strategy';
 import { Comic } from './entities/comic.entity';
 
@@ -40,8 +39,7 @@ export class ComicService {
       },
     };
 
-    const strategyType: PaginationType = pagination.cursor ? 'cursor' : 'offset';
-    const strategy = this.paginationRegistry.getStrategy<Comic>(strategyType);
+    const strategy = this.paginationRegistry.getStrategy<Comic>(pagination);
     return strategy.paginate(this.prisma, 'comic', pagination, queryInclude);
   }
 

@@ -3,7 +3,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { PaginationOptions } from '../../comic/dto/find-many-options.dto';
 
 export type SupportedModel = 'comic' | 'chapter' | 'readingEventLog';
-export type PaginationType = 'offset' | 'cursor';
 
 export interface PaginationResult<T> {
   items: T[];
@@ -105,18 +104,13 @@ export class CursorPaginationStrategy<T> implements PaginationStrategy<T> {
 
 @Injectable()
 export class PaginationStrategyRegistry {
-  private readonly strategies = new Map<PaginationType, PaginationStrategy<unknown>>();
+  private readonly cursorStrategy = new CursorPaginationStrategy<unknown>();
+  private readonly offsetStrategy = new OffsetPaginationStrategy<unknown>();
 
-  constructor() {
-    this.strategies.set('offset', new OffsetPaginationStrategy());
-    this.strategies.set('cursor', new CursorPaginationStrategy());
-  }
-
-  getStrategy<T>(type: PaginationType): PaginationStrategy<T> {
-    const strategy = this.strategies.get(type);
-    if (!strategy) {
-      throw new Error(`Pagination strategy '${type}' is not registered.`);
+  getStrategy<T>(options: PaginationOptions = {}): PaginationStrategy<T> {
+    if (options.cursor) {
+      return this.cursorStrategy as PaginationStrategy<T>;
     }
-    return strategy as PaginationStrategy<T>;
+    return this.offsetStrategy as PaginationStrategy<T>;
   }
 }

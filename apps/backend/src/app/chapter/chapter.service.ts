@@ -7,7 +7,6 @@ import { transformCreateChapter } from './transformations';
 import {
   PaginationResult,
   PaginationStrategyRegistry,
-  PaginationType,
 } from '../common/pagination/pagination.strategy';
 import { Chapter } from './entities/chapter.entity';
 
@@ -42,8 +41,7 @@ export class ChapterService {
     };
     const orderBy = { chapterNumber: 'asc' };
 
-    const strategyType: PaginationType = pagination.cursor ? 'cursor' : 'offset';
-    const strategy = this.paginationRegistry.getStrategy<Chapter>(strategyType);
+    const strategy = this.paginationRegistry.getStrategy<Chapter>(pagination);
     return strategy.paginate(
       this.prisma,
       'chapter',
