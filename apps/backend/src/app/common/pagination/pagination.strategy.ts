@@ -1,5 +1,9 @@
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PaginationOptions } from '../../comic/dto/find-many-options.dto';
+
+export type SupportedModel = 'comic' | 'chapter' | 'readingEventLog';
+export type PaginationType = 'offset' | 'cursor';
 
 export interface PaginationResult<T> {
   items: T[];
@@ -13,7 +17,7 @@ export interface PaginationResult<T> {
 export interface PaginationStrategy<T> {
   paginate(
     prisma: PrismaService,
-    modelName: 'comic' | 'chapter' | 'readingEventLog',
+    modelName: SupportedModel,
     options: PaginationOptions,
     queryInclude?: Record<string, unknown>,
     where?: Record<string, unknown>,
@@ -24,7 +28,7 @@ export interface PaginationStrategy<T> {
 export class OffsetPaginationStrategy<T> implements PaginationStrategy<T> {
   async paginate(
     prisma: PrismaService,
-    modelName: 'comic' | 'chapter' | 'readingEventLog',
+    modelName: SupportedModel,
     options: PaginationOptions,
     queryInclude?: Record<string, unknown>,
     where?: Record<string, unknown>,
@@ -34,7 +38,7 @@ export class OffsetPaginationStrategy<T> implements PaginationStrategy<T> {
     const limit = Number(options.limit || 20);
     const skip = (page - 1) * limit;
 
-    const delegate = (prisma as unknown as Record<string, unknown>)[modelName] as {
+    const delegate = prisma[modelName] as unknown as {
       findMany: (args: unknown) => Promise<T[]>;
       count: (args?: unknown) => Promise<number>;
     };
@@ -63,7 +67,7 @@ export class OffsetPaginationStrategy<T> implements PaginationStrategy<T> {
 export class CursorPaginationStrategy<T> implements PaginationStrategy<T> {
   async paginate(
     prisma: PrismaService,
-    modelName: 'comic' | 'chapter' | 'readingEventLog',
+    modelName: SupportedModel,
     options: PaginationOptions,
     queryInclude?: Record<string, unknown>,
     where?: Record<string, unknown>,
@@ -72,7 +76,7 @@ export class CursorPaginationStrategy<T> implements PaginationStrategy<T> {
     const limit = Number(options.limit || 20);
     const cursor = options.cursor;
 
-    const delegate = (prisma as unknown as Record<string, unknown>)[modelName] as {
+    const delegate = prisma[modelName] as unknown as {
       findMany: (args: unknown) => Promise<T[]>;
     };
 
@@ -96,5 +100,23 @@ export class CursorPaginationStrategy<T> implements PaginationStrategy<T> {
       limit,
       nextCursor,
     };
+  }
+}
+
+@Injectable()
+export class PaginationStrategyRegistry {
+  private readonly strategies = new Map<PaginationType, PaginationStrategy<unknown>>();
+
+  constructor() {
+    this.strategies.set('offset', new OffsetPaginationStrategy());
+    this.strategies.set('cursor', new CursorPaginationStrategy());
+  }
+
+  getStrategy<T>(type: PaginationType): PaginationStrategy<T> {
+    const strategy = this.strategies.get(type);
+    if (!strategy) {
+      throw new Error(`Pagination strategy '${type}' is not registered.`);
+    }
+    return strategy as PaginationStrategy<T>;
   }
 }

@@ -5,15 +5,18 @@ import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { FindManyChaptersOptions } from './dto/find-many-options.dto';
 import { transformCreateChapter } from './transformations';
 import {
-  CursorPaginationStrategy,
-  OffsetPaginationStrategy,
   PaginationResult,
+  PaginationStrategyRegistry,
+  PaginationType,
 } from '../common/pagination/pagination.strategy';
 import { Chapter } from './entities/chapter.entity';
 
 @Injectable()
 export class ChapterService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private paginationRegistry: PaginationStrategyRegistry,
+    private prisma: PrismaService
+  ) {}
 
   async create(data: CreateChapterDto): Promise<Chapter> {
     const prismaData = transformCreateChapter(data);
@@ -39,27 +42,16 @@ export class ChapterService {
     };
     const orderBy = { chapterNumber: 'asc' };
 
-    if (pagination.cursor) {
-      const strategy = new CursorPaginationStrategy<Chapter>();
-      return strategy.paginate(
-        this.prisma,
-        'chapter',
-        pagination,
-        queryInclude,
-        where,
-        orderBy
-      );
-    } else {
-      const strategy = new OffsetPaginationStrategy<Chapter>();
-      return strategy.paginate(
-        this.prisma,
-        'chapter',
-        pagination,
-        queryInclude,
-        where,
-        orderBy
-      );
-    }
+    const strategyType: PaginationType = pagination.cursor ? 'cursor' : 'offset';
+    const strategy = this.paginationRegistry.getStrategy<Chapter>(strategyType);
+    return strategy.paginate(
+      this.prisma,
+      'chapter',
+      pagination,
+      queryInclude,
+      where,
+      orderBy
+    );
   }
 
   async findOne(id: string): Promise<Chapter | null> {
@@ -81,10 +73,10 @@ export class ChapterService {
         ...chapterData,
         scanlationGroups: scanlationGroupIds
           ? {
-              deleteMany: {},
               create: scanlationGroupIds.map((groupId) => ({
                 scanlationGroupId: groupId,
               })),
+              deleteMany: {},
             }
           : undefined,
       },

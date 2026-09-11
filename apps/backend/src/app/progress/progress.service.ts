@@ -3,16 +3,19 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
 import { FindManyLogsOptions } from './dto/find-many-logs.dto';
 import {
-  CursorPaginationStrategy,
-  OffsetPaginationStrategy,
   PaginationResult,
+  PaginationStrategyRegistry,
+  PaginationType,
 } from '../common/pagination/pagination.strategy';
 import { ReadingProgress } from './entities/reading-progress.entity';
 import { ReadingEventLog } from './entities/reading-event-log.entity';
 
 @Injectable()
 export class ProgressService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private paginationRegistry: PaginationStrategyRegistry,
+    private prisma: PrismaService
+  ) {}
 
   async getUserProgress(userId: string): Promise<ReadingProgress[]> {
     return this.prisma.readingProgress.findMany({
@@ -65,26 +68,15 @@ export class ProgressService {
     };
     const orderBy = { timestamp: 'desc' };
 
-    if (pagination.cursor) {
-      const strategy = new CursorPaginationStrategy<ReadingEventLog>();
-      return strategy.paginate(
-        this.prisma,
-        'readingEventLog',
-        pagination,
-        queryInclude,
-        where,
-        orderBy
-      );
-    } else {
-      const strategy = new OffsetPaginationStrategy<ReadingEventLog>();
-      return strategy.paginate(
-        this.prisma,
-        'readingEventLog',
-        pagination,
-        queryInclude,
-        where,
-        orderBy
-      );
-    }
+    const strategyType: PaginationType = pagination.cursor ? 'cursor' : 'offset';
+    const strategy = this.paginationRegistry.getStrategy<ReadingEventLog>(strategyType);
+    return strategy.paginate(
+      this.prisma,
+      'readingEventLog',
+      pagination,
+      queryInclude,
+      where,
+      orderBy
+    );
   }
 }

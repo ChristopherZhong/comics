@@ -4,15 +4,18 @@ import { CreateComic } from './dto/create-comic.dto';
 import { transformCreateComic } from './transformations';
 import { FindManyOptions } from './dto/find-many-options.dto';
 import {
-  CursorPaginationStrategy,
-  OffsetPaginationStrategy,
   PaginationResult,
+  PaginationStrategyRegistry,
+  PaginationType,
 } from '../common/pagination/pagination.strategy';
 import { Comic } from './entities/comic.entity';
 
 @Injectable()
 export class ComicService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private paginationRegistry: PaginationStrategyRegistry,
+    private prisma: PrismaService
+  ) {}
 
   async create(data: CreateComic): Promise<Comic> {
     const prismaData = transformCreateComic(data);
@@ -37,13 +40,9 @@ export class ComicService {
       },
     };
 
-    if (pagination.cursor) {
-      const strategy = new CursorPaginationStrategy<Comic>();
-      return strategy.paginate(this.prisma, 'comic', pagination, queryInclude);
-    } else {
-      const strategy = new OffsetPaginationStrategy<Comic>();
-      return strategy.paginate(this.prisma, 'comic', pagination, queryInclude);
-    }
+    const strategyType: PaginationType = pagination.cursor ? 'cursor' : 'offset';
+    const strategy = this.paginationRegistry.getStrategy<Comic>(strategyType);
+    return strategy.paginate(this.prisma, 'comic', pagination, queryInclude);
   }
 
   async findOne(id: string): Promise<Comic | null> {
@@ -67,10 +66,10 @@ export class ComicService {
         ...comicData,
         scanlationGroups: scanlationGroupIds
           ? {
-              deleteMany: {},
               create: scanlationGroupIds.map((groupId) => ({
                 scanlationGroupId: groupId,
               })),
+              deleteMany: {},
             }
           : undefined,
       },
