@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ChapterService } from './chapter.service';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
@@ -27,17 +27,17 @@ import { Roles } from '../auth/roles.decorator';
 export class ChapterController {
   constructor(private chapterService: ChapterService) {}
 
+  /** Create a new chapter */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Post()
-  @ApiOperation({ summary: 'Create a new chapter' })
   @ApiResponse({ status: 201, type: Chapter })
   async create(@Body() body: CreateChapterDto): Promise<Chapter> {
     return this.chapterService.create(body);
   }
 
+  /** Find chapters with pagination */
   @Get()
-  @ApiOperation({ summary: 'Find chapters with pagination' })
   async findMany(
     @Query() query: FindManyChaptersDto
   ): Promise<PaginationResult<Chapter>> {
@@ -51,17 +51,17 @@ export class ChapterController {
     });
   }
 
+  /** Find chapter by ID */
   @Get(':id')
-  @ApiOperation({ summary: 'Find chapter by ID' })
   @ApiResponse({ status: 200, type: Chapter })
   async findOne(@Param('id') id: string): Promise<Chapter | null> {
     return this.chapterService.findOne(id);
   }
 
+  /** Update a chapter */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a chapter' })
   @ApiResponse({ status: 200, type: Chapter })
   async update(
     @Param('id') id: string,
@@ -70,10 +70,10 @@ export class ChapterController {
     return this.chapterService.update(id, body);
   }
 
+  /** Delete a chapter */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a chapter' })
   async remove(@Param('id') id: string): Promise<Chapter> {
     return this.chapterService.remove(id);
   }

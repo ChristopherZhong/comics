@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ComicService } from './comic.service';
 import { CreateComic } from './dto/create-comic.dto';
 import { FindManyComicsDto } from './dto/find-many-options.dto';
@@ -26,17 +26,17 @@ import { PaginationResult } from '../common/pagination/pagination.strategy';
 export class ComicController {
   constructor(private comicService: ComicService) {}
 
+  /** Create a new comic series */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Post()
-  @ApiOperation({ summary: 'Create a new comic series' })
   @ApiResponse({ status: 201, type: Comic })
   async create(@Body() body: CreateComic): Promise<Comic> {
     return this.comicService.create(body);
   }
 
+  /** Find all comic series with pagination */
   @Get()
-  @ApiOperation({ summary: 'Find all comic series with pagination' })
   async findMany(
     @Query() query: FindManyComicsDto
   ): Promise<PaginationResult<Comic>> {
@@ -49,17 +49,17 @@ export class ComicController {
     });
   }
 
+  /** Find comic series by ID */
   @Get(':id')
-  @ApiOperation({ summary: 'Find comic series by ID' })
   @ApiResponse({ status: 200, type: Comic })
   async findOne(@Param('id') id: string): Promise<Comic | null> {
     return this.comicService.findOne(id);
   }
 
+  /** Update a comic series */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a comic series' })
   async update(
     @Param('id') id: string,
     @Body() body: Partial<CreateComic>
@@ -67,10 +67,10 @@ export class ComicController {
     return this.comicService.update(id, body);
   }
 
+  /** Delete a comic series */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a comic series' })
   async remove(@Param('id') id: string): Promise<Comic> {
     return this.comicService.remove(id);
   }

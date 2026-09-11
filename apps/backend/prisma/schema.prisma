@@ -119,7 +119,7 @@ model ComicScanlationGroup {
   // model-specific columns
   comicId           String          @map("comic_id")
   scanlationGroupId String          @map("scanlation_group_id")
-  url               String?
+  url               String
 
   // relations
   comic             Comic           @relation(fields: [comicId], references: [id], onDelete: Cascade)
@@ -165,7 +165,7 @@ model ChapterScanlationGroup {
   // model-specific columns
   chapterId         String          @map("chapter_id")
   scanlationGroupId String          @map("scanlation_group_id")
-  url               String?
+  url               String
 
   // relations
   chapter           Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade)

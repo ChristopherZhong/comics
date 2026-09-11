@@ -1,5 +1,5 @@
 import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -17,28 +17,28 @@ interface AuthenticatedRequest {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  /** Register a new user */
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user' })
-  @ApiResponse({ status: 201, description: 'User successfully created' })
+  @ApiResponse({ description: 'User successfully created', status: 201 })
   async register(
     @Body() body: RegisterDto
   ): Promise<Omit<UserEntity, 'roles'> & { roles: Array<{ name: string }> }> {
     return this.authService.register(body.email, body.password, body.roles);
   }
 
+  /** Log in with credentials */
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  @ApiOperation({ summary: 'Log in with credentials' })
   @ApiBody({ type: LoginDto })
   @ApiResponse({ status: 200, type: AuthResponseDto })
   async login(@Request() request: AuthenticatedRequest): Promise<AuthResponseDto> {
     return this.authService.login(request.user);
   }
 
+  /** Get profile of current authenticated user */
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  @ApiOperation({ summary: 'Get profile of current authenticated user' })
   @ApiResponse({ status: 200, type: UserEntity })
   getProfile(@Request() request: AuthenticatedRequest): UserEntity {
     return request.user;

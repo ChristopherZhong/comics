@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, UseGuards, Request, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ProgressService } from './progress.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
 import { FindManyLogsDto } from './dto/find-many-logs.dto';
@@ -21,8 +21,8 @@ interface AuthenticatedUserRequest {
 export class ProgressController {
   constructor(private progressService: ProgressService) {}
 
+  /** Get current user reading progress */
   @Get()
-  @ApiOperation({ summary: 'Get current user reading progress' })
   @ApiResponse({ status: 200, type: [ReadingProgress] })
   async getMyProgress(
     @Request() request: AuthenticatedUserRequest
@@ -30,8 +30,8 @@ export class ProgressController {
     return this.progressService.getUserProgress(request.user.id);
   }
 
+  /** Update reading progress for a chapter */
   @Post('update')
-  @ApiOperation({ summary: 'Update reading progress for a chapter' })
   @ApiResponse({ status: 200, type: ReadingProgress })
   async updateProgress(
     @Request() request: AuthenticatedUserRequest,
@@ -40,8 +40,8 @@ export class ProgressController {
     return this.progressService.updateProgress(request.user.id, dto);
   }
 
+  /** Get reading activity logs for current user */
   @Get('logs')
-  @ApiOperation({ summary: 'Get reading activity logs for current user' })
   async getMyLogs(
     @Request() request: AuthenticatedUserRequest,
     @Query() query: FindManyLogsDto
@@ -56,8 +56,8 @@ export class ProgressController {
     });
   }
 
+  /** Get all reading activity logs across all users */
   @Get('logs/all')
-  @ApiOperation({ summary: 'Get all reading activity logs across all users' })
   async getAllLogs(
     @Query() query: FindManyLogsDto
   ): Promise<PaginationResult<ReadingEventLog>> {
