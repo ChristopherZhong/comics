@@ -1,0 +1,227 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+model Role {
+  // standard columns
+  id        String    @id @default(uuid(7))
+  createdAt DateTime  @default(now()) @map("created_at")
+  createdBy String?   @map("created_by")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  updatedBy String?   @map("updated_by")
+
+  // model-specific columns
+  name      String    @unique
+
+  // relations
+  users     User[]
+
+  // settings
+  @@map("roles")
+}
+
+model User {
+  // standard columns
+  id               String            @id @default(uuid(7))
+  createdAt        DateTime          @default(now()) @map("created_at")
+  createdBy        String?           @map("created_by")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  updatedBy        String?           @map("updated_by")
+
+  // model-specific columns
+  email            String            @unique
+  password         String
+
+  // relations
+  readingEventLogs ReadingEventLog[]
+  readingProgress  ReadingProgress[]
+  roles            Role[]
+
+  // settings
+  @@map("users")
+}
+
+enum PublicationStatus {
+  HIATUS
+  ONGOING
+  COMPLETED
+}
+
+enum ComicType {
+  MANHUA
+  MANHWA
+  MANGA
+  COMIC
+  OTHER
+}
+
+model ScanlationGroup {
+  // standard columns
+  id                      String                   @id @default(uuid(7))
+  createdAt               DateTime                 @default(now()) @map("created_at")
+  createdBy               String?                  @map("created_by")
+  updatedAt               DateTime                 @updatedAt @map("updated_at")
+  updatedBy               String?                  @map("updated_by")
+
+  // model-specific columns
+  name                    String                   @unique
+  website                 String?
+
+  // relations
+  chapterScanlationGroups ChapterScanlationGroup[]
+  comicScanlationGroups   ComicScanlationGroup[]
+
+  // settings
+  @@map("scanlation_groups")
+}
+
+model Comic {
+  // standard columns
+  id               String                 @id @default(uuid(7))
+  createdAt        DateTime               @default(now()) @map("created_at")
+  createdBy        String?                @map("created_by")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+  updatedBy        String?                @map("updated_by")
+
+  // model-specific columns
+  artist           String?
+  coverUrl         String?                @map("cover_url")
+  description      String?
+  language         String?                @map("language") // ISO 639-1 language code (e.g. "en", "ja", "ko")
+  publisher        String?
+  status           PublicationStatus
+  title            String
+  type             ComicType
+  writer           String?
+
+  // relations
+  chapters         Chapter[]
+  scanlationGroups ComicScanlationGroup[]
+
+  // settings
+  @@map("comics")
+}
+
+model ComicScanlationGroup {
+  // standard columns
+  id                String          @id @default(uuid(7))
+  createdAt         DateTime        @default(now()) @map("created_at")
+  createdBy         String?         @map("created_by")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  updatedBy         String?         @map("updated_by")
+
+  // model-specific columns
+  comicId           String          @map("comic_id")
+  scanlationGroupId String          @map("scanlation_group_id")
+  url               String
+
+  // relations
+  comic             Comic           @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  scanlationGroup   ScanlationGroup @relation(fields: [scanlationGroupId], references: [id], onDelete: Cascade)
+
+  // settings
+  @@unique([comicId, scanlationGroupId])
+  @@map("comic_scanlation_groups")
+}
+
+model Chapter {
+  // standard columns
+  id               String                   @id @default(uuid(7))
+  createdAt        DateTime                 @default(now()) @map("created_at")
+  createdBy        String?                  @map("created_by")
+  updatedAt        DateTime                 @updatedAt @map("updated_at")
+  updatedBy        String?                  @map("updated_by")
+
+  // model-specific columns
+  chapterNumber    Float                    @map("chapter_number")
+  comicId          String                   @map("comic_id")
+  pagesCount       Int                      @default(0) @map("pages_count")
+  title            String
+
+  // relations
+  comic            Comic                    @relation(fields: [comicId], references: [id], onDelete: Cascade)
+  readingLogs      ReadingEventLog[]
+  readingProgress  ReadingProgress[]
+  scanlationGroups ChapterScanlationGroup[]
+
+  // settings
+  @@map("chapters")
+}
+
+model ChapterScanlationGroup {
+  // standard columns
+  id                String          @id @default(uuid(7))
+  createdAt         DateTime        @default(now()) @map("created_at")
+  createdBy         String?         @map("created_by")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  updatedBy         String?         @map("updated_by")
+
+  // model-specific columns
+  chapterId         String          @map("chapter_id")
+  scanlationGroupId String          @map("scanlation_group_id")
+  url               String
+
+  // relations
+  chapter           Chapter         @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  scanlationGroup   ScanlationGroup @relation(fields: [scanlationGroupId], references: [id], onDelete: Cascade)
+
+  // settings
+  @@unique([chapterId, scanlationGroupId])
+  @@map("chapter_scanlation_groups")
+}
+
+enum ProgressStatus {
+  UNREAD
+  IN_PROGRESS
+  COMPLETED
+}
+
+model ReadingProgress {
+  // standard columns
+  id        String         @id @default(uuid(7))
+  createdAt DateTime       @default(now()) @map("created_at")
+  createdBy String?        @map("created_by")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  updatedBy String?        @map("updated_by")
+
+  // model-specific columns
+  chapterId String         @map("chapter_id")
+  status    ProgressStatus @default(UNREAD)
+  userId    String         @map("user_id")
+
+  // relations
+  chapter   Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // settings
+  @@unique([userId, chapterId])
+  @@map("reading_progress")
+}
+
+model ReadingEventLog {
+  // standard columns
+  id        String         @id @default(uuid(7))
+  createdAt DateTime       @default(now()) @map("created_at")
+  createdBy String?        @map("created_by")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  updatedBy String?        @map("updated_by")
+
+  // model-specific columns
+  chapterId String         @map("chapter_id")
+  status    ProgressStatus
+  timestamp DateTime       @default(now())
+  userId    String         @map("user_id")
+
+  // relations
+  chapter   Chapter        @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // settings
+  @@map("reading_event_logs")
+}
