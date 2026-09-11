@@ -14,7 +14,7 @@ export default {
   globalSetup: '<rootDir>/src/support/global-setup.ts',
   globalTeardown: '<rootDir>/src/support/global-teardown.ts',
   moduleFileExtensions: ['ts', 'js', 'html'],
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   setupFiles: ['<rootDir>/src/support/test-setup.ts'],
   testEnvironment: 'node',
   transform: {

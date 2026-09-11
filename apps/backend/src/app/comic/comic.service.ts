@@ -16,6 +16,12 @@ export class ComicService {
     private prisma: PrismaService
   ) {}
 
+  /**
+   * Create a new comic series in the database.
+   *
+   * @param data Creation payload for the comic series.
+   * @returns Newly created comic record with scanlation groups.
+   */
   async create(data: CreateComic): Promise<Comic> {
     const prismaData = transformCreateComic(data);
     return this.prisma.comic.create({
@@ -28,6 +34,12 @@ export class ComicService {
     });
   }
 
+  /**
+   * Retrieve comic series using strategy-pattern pagination.
+   *
+   * @param options Pagination options including cursor or offset parameters.
+   * @returns Paginated list of comic records.
+   */
   async findMany(options: FindManyOptions = {}): Promise<PaginationResult<Comic>> {
     const pagination = options.pagination || {};
     const queryInclude = {
@@ -43,6 +55,12 @@ export class ComicService {
     return strategy.paginate(this.prisma, 'comic', pagination, queryInclude);
   }
 
+  /**
+   * Find a single comic series by ID with chapters and scanlation groups.
+   *
+   * @param id Unique identifier of the comic.
+   * @returns Comic record or null if not found.
+   */
   async findOne(id: string): Promise<Comic | null> {
     return this.prisma.comic.findUnique({
       include: {
@@ -57,6 +75,13 @@ export class ComicService {
     });
   }
 
+  /**
+   * Update an existing comic series.
+   *
+   * @param id Unique identifier of the comic.
+   * @param data Partial comic fields to update.
+   * @returns Updated comic record.
+   */
   async update(id: string, data: Partial<CreateComic>): Promise<Comic> {
     const { scanlationGroupIds, ...comicData } = data;
     return this.prisma.comic.update({
@@ -80,6 +105,12 @@ export class ComicService {
     });
   }
 
+  /**
+   * Delete a comic series by ID.
+   *
+   * @param id Unique identifier of the comic to remove.
+   * @returns Deleted comic record.
+   */
   async remove(id: string): Promise<Comic> {
     return this.prisma.comic.delete({ where: { id } });
   }

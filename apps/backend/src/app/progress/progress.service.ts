@@ -16,6 +16,12 @@ export class ProgressService {
     private prisma: PrismaService
   ) {}
 
+  /**
+   * Get all chapter reading progress records for a user.
+   *
+   * @param userId Unique identifier of the user.
+   * @returns Array of reading progress records with chapter and comic details.
+   */
   async getUserProgress(userId: string): Promise<ReadingProgress[]> {
     return this.prisma.readingProgress.findMany({
       include: {
@@ -27,6 +33,13 @@ export class ProgressService {
     });
   }
 
+  /**
+   * Upsert reading progress for a user and log the audit event.
+   *
+   * @param userId Unique identifier of the user.
+   * @param dto Payload containing chapter ID and progress status.
+   * @returns Upserted reading progress record.
+   */
   async updateProgress(
     userId: string,
     dto: UpdateProgressDto
@@ -54,6 +67,12 @@ export class ProgressService {
     return progress;
   }
 
+  /**
+   * Get paginated reading event logs for a specific user or globally.
+   *
+   * @param options FindMany options with optional user ID filter and pagination.
+   * @returns Paginated list of reading event logs.
+   */
   async getEventLogs(
     options: FindManyLogsOptions = {}
   ): Promise<PaginationResult<ReadingEventLog>> {

@@ -14,6 +14,17 @@ export interface PaginationResult<T> {
 }
 
 export interface PaginationStrategy<T> {
+  /**
+   * Execute pagination query against Prisma.
+   *
+   * @param prisma Prisma database service instance.
+   * @param modelName Target model key on PrismaService.
+   * @param options Pagination parameters (page, limit, cursor).
+   * @param queryInclude Optional relations to include.
+   * @param where Optional filter criteria.
+   * @param orderBy Optional order clause.
+   * @returns Paginated result set containing items and metadata.
+   */
   paginate(
     prisma: PrismaService,
     modelName: SupportedModel,
@@ -25,6 +36,17 @@ export interface PaginationStrategy<T> {
 }
 
 export class OffsetPaginationStrategy<T> implements PaginationStrategy<T> {
+  /**
+   * Paginate results using page-based offset and total count.
+   *
+   * @param prisma Prisma database service instance.
+   * @param modelName Target model key on PrismaService.
+   * @param options Offset options containing page and limit.
+   * @param queryInclude Optional relations to include in Prisma query.
+   * @param where Optional Prisma where filter clause.
+   * @param orderBy Optional Prisma order clause.
+   * @returns Paginated result object with total count and total pages.
+   */
   async paginate(
     prisma: PrismaService,
     modelName: SupportedModel,
@@ -64,6 +86,17 @@ export class OffsetPaginationStrategy<T> implements PaginationStrategy<T> {
 }
 
 export class CursorPaginationStrategy<T> implements PaginationStrategy<T> {
+  /**
+   * Paginate results using cursor ID and limit parameters.
+   *
+   * @param prisma Prisma database service instance.
+   * @param modelName Target model key on PrismaService.
+   * @param options Cursor options containing cursor ID and limit.
+   * @param queryInclude Optional relations to include in Prisma query.
+   * @param where Optional Prisma where filter clause.
+   * @param orderBy Optional Prisma order clause.
+   * @returns Paginated result object with nextCursor pointer.
+   */
   async paginate(
     prisma: PrismaService,
     modelName: SupportedModel,
@@ -107,6 +140,12 @@ export class PaginationStrategyRegistry {
   private readonly cursorStrategy = new CursorPaginationStrategy<unknown>();
   private readonly offsetStrategy = new OffsetPaginationStrategy<unknown>();
 
+  /**
+   * Determine and return the appropriate pagination strategy based on options.
+   *
+   * @param options Pagination options containing cursor or page settings.
+   * @returns CursorPaginationStrategy if cursor is provided, else OffsetPaginationStrategy.
+   */
   getStrategy<T>(options: PaginationOptions = {}): PaginationStrategy<T> {
     if (options.cursor) {
       return this.cursorStrategy as PaginationStrategy<T>;

@@ -17,6 +17,12 @@ export class ChapterService {
     private prisma: PrismaService
   ) {}
 
+  /**
+   * Create a new chapter in a comic series.
+   *
+   * @param data Chapter creation payload.
+   * @returns Created chapter record with scanlation groups.
+   */
   async create(data: CreateChapterDto): Promise<Chapter> {
     const prismaData = transformCreateChapter(data);
     return this.prisma.chapter.create({
@@ -29,6 +35,12 @@ export class ChapterService {
     });
   }
 
+  /**
+   * Find chapters for a comic series with strategy-pattern pagination.
+   *
+   * @param options FindMany options including comic ID filter and pagination.
+   * @returns Paginated list of chapters.
+   */
   async findMany(
     options: FindManyChaptersOptions = {}
   ): Promise<PaginationResult<Chapter>> {
@@ -52,6 +64,12 @@ export class ChapterService {
     );
   }
 
+  /**
+   * Find a chapter by ID with comic and scanlation groups included.
+   *
+   * @param id Unique identifier of the chapter.
+   * @returns Chapter record or null if not found.
+   */
   async findOne(id: string): Promise<Chapter | null> {
     return this.prisma.chapter.findUnique({
       include: {
@@ -64,6 +82,13 @@ export class ChapterService {
     });
   }
 
+  /**
+   * Update an existing chapter by ID.
+   *
+   * @param id Unique identifier of the chapter.
+   * @param data Partial chapter payload to update.
+   * @returns Updated chapter record.
+   */
   async update(id: string, data: UpdateChapterDto): Promise<Chapter> {
     const { scanlationGroupIds, ...chapterData } = data;
     return this.prisma.chapter.update({
@@ -87,6 +112,12 @@ export class ChapterService {
     });
   }
 
+  /**
+   * Remove a chapter by ID.
+   *
+   * @param id Unique identifier of the chapter to remove.
+   * @returns Deleted chapter record.
+   */
   async remove(id: string): Promise<Chapter> {
     return this.prisma.chapter.delete({ where: { id } });
   }

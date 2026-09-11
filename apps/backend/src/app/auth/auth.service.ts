@@ -18,6 +18,13 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
+  /**
+   * Validate user credentials against stored password hash.
+   *
+   * @param email Email address of the user.
+   * @param pass Plaintext password to verify.
+   * @returns User object without password if valid, or null if invalid.
+   */
   async validateUser(
     email: string,
     pass: string
@@ -36,6 +43,12 @@ export class AuthService {
     return null;
   }
 
+  /**
+   * Generate JWT access token for an authenticated user.
+   *
+   * @param user Authenticated user record with roles.
+   * @returns Access token object and user entity.
+   */
   async login(user: UserWithRoles): Promise<{ access_token: string; user: UserEntity }> {
     const rolesList = user.roles.map((roleObject) => roleObject.name);
     const payload = {
@@ -54,6 +67,14 @@ export class AuthService {
     };
   }
 
+  /**
+   * Register a new user with encrypted password and assigned roles.
+   *
+   * @param email User email address.
+   * @param pass Plaintext password.
+   * @param rolesList List of role names to assign.
+   * @returns Newly created user record without password.
+   */
   async register(
     email: string,
     pass: string,

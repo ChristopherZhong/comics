@@ -18,7 +18,7 @@
           "backend:serve"
         ],
         "options": {
-          "jestConfig": "apps/backend-e2e/jest.config.cts",
+          "jestConfig": "apps/backend-e2e/jest.config.ts",
           "passWithNoTests": true
         }
       }

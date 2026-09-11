@@ -17,7 +17,12 @@ interface AuthenticatedRequest {
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  /** Register a new user */
+  /**
+   * Register a new user account.
+   *
+   * @param body Data transfer object containing registration details.
+   * @returns The registered user object without password.
+   */
   @Post('register')
   async register(
     @Body() body: RegisterDto
@@ -25,7 +30,13 @@ export class AuthController {
     return this.authService.register(body.email, body.password, body.roles);
   }
 
-  /** Log in with credentials */
+  /**
+   * Log in with user credentials.
+   *
+   * @param _body Data transfer object containing email and password credentials.
+   * @param request The authenticated HTTP request containing validated user information.
+   * @returns Authentication response object with JWT access token and user info.
+   */
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(
@@ -35,7 +46,12 @@ export class AuthController {
     return this.authService.login(request.user);
   }
 
-  /** Get profile of current authenticated user */
+  /**
+   * Get profile of the current authenticated user.
+   *
+   * @param request The authenticated HTTP request containing user payload.
+   * @returns The user entity of the current user.
+   */
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('profile')

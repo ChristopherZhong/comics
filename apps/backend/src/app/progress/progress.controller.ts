@@ -21,7 +21,12 @@ interface AuthenticatedUserRequest {
 export class ProgressController {
   constructor(private progressService: ProgressService) {}
 
-  /** Get current user reading progress */
+  /**
+   * Get reading progress records for the current user.
+   *
+   * @param request Authenticated request containing user context.
+   * @returns Array of reading progress objects for the user.
+   */
   @Get()
   async getMyProgress(
     @Request() request: AuthenticatedUserRequest
@@ -29,7 +34,13 @@ export class ProgressController {
     return this.progressService.getUserProgress(request.user.id);
   }
 
-  /** Update reading progress for a chapter */
+  /**
+   * Update or create reading progress for a chapter.
+   *
+   * @param request Authenticated request containing user context.
+   * @param dto Payload containing chapter ID and status.
+   * @returns Updated reading progress entity.
+   */
   @Post('update')
   async updateProgress(
     @Request() request: AuthenticatedUserRequest,
@@ -38,7 +49,13 @@ export class ProgressController {
     return this.progressService.updateProgress(request.user.id, dto);
   }
 
-  /** Get reading activity logs for current user */
+  /**
+   * Get reading activity logs for the current user.
+   *
+   * @param request Authenticated request containing user context.
+   * @param query Query options for pagination parameters.
+   * @returns Paginated result of reading event logs.
+   */
   @Get('logs')
   async getMyLogs(
     @Request() request: AuthenticatedUserRequest,
@@ -54,7 +71,12 @@ export class ProgressController {
     });
   }
 
-  /** Get all reading activity logs across all users */
+  /**
+   * Get all reading activity logs across all users (admin access).
+   *
+   * @param query Query options for pagination parameters.
+   * @returns Paginated result of reading event logs across users.
+   */
   @Get('logs/all')
   async getAllLogs(
     @Query() query: FindManyLogsDto

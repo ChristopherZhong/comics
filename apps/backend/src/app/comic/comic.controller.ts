@@ -26,7 +26,12 @@ import { PaginationResult } from '../common/pagination/pagination.strategy';
 export class ComicController {
   constructor(private comicService: ComicService) {}
 
-  /** Create a new comic series */
+  /**
+   * Create a new comic series.
+   *
+   * @param body Data transfer object for creating a comic.
+   * @returns The created comic entity.
+   */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Post()
@@ -34,7 +39,12 @@ export class ComicController {
     return this.comicService.create(body);
   }
 
-  /** Find all comic series with pagination */
+  /**
+   * Find all comic series with offset or cursor pagination.
+   *
+   * @param query Query options containing page, limit, or cursor.
+   * @returns Paginated result of comic entities.
+   */
   @Get()
   async findMany(
     @Query() query: FindManyComicsDto
@@ -48,13 +58,24 @@ export class ComicController {
     });
   }
 
-  /** Find comic series by ID */
+  /**
+   * Find comic series by ID.
+   *
+   * @param id Unique identifier of the comic.
+   * @returns The comic entity or null if not found.
+   */
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Comic | null> {
     return this.comicService.findOne(id);
   }
 
-  /** Update a comic series */
+  /**
+   * Update an existing comic series.
+   *
+   * @param id Unique identifier of the comic.
+   * @param body Partial comic data to update.
+   * @returns Updated comic entity.
+   */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Patch(':id')
@@ -65,7 +86,12 @@ export class ComicController {
     return this.comicService.update(id, body);
   }
 
-  /** Delete a comic series */
+  /**
+   * Delete a comic series.
+   *
+   * @param id Unique identifier of the comic.
+   * @returns Deleted comic entity.
+   */
   @UseGuards(RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
