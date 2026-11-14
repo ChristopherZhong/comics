@@ -39,7 +39,7 @@
     "@nx/vitest": "24.0.6",
     "@nx/web": "24.0.6",
     "@nx/webpack": "24.0.6",
-    "@playwright/test": "^1.65.0",
+    "@playwright/test": "^1.65.1",
     "@swc/core": "~1.15.5",
     "@swc/helpers": "~0.5.18",
     "@swc/jest": "~0.2.38",
